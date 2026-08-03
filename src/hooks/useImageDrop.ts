@@ -1,0 +1,432 @@
+import { useEffect, useRef, useState, type RefObject } from 'react'
+import { invoke } from '@tauri-apps/api/core'
+import type { Event as TauriEvent, UnlistenFn } from '@tauri-apps/api/event'
+import type { DragDropEvent as TauriDragDropPayload } from '@tauri-apps/api/webview'
+import { isTauri } from '../mock-tauri'
+import {
+  imageUploadDestinationFromSettings,
+  type ImageUploadDestination,
+} from '../lib/picgoServer'
+import { trackImageUploadBackend } from '../lib/productAnalytics'
+import type { Settings } from '../types'
+import { cleanupTauriEventListeners } from '../utils/tauriEventCleanup'
+import { attachmentAssetUrlFromPath } from '../utils/vaultAttachments'
+
+const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif']
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'tiff']
+const UNSUPPORTED_HEIC_EXTENSIONS = ['heic', 'heif']
+const UNSUPPORTED_HEIC_MIME_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']
+const TAURI_DRAG_DROP_EVENT = 'tauri://drag-drop'
+const TAURI_DRAG_LEAVE_EVENT = 'tauri://drag-leave'
+
+type ImageUrlHandler = (url: string) => void
+type UnsupportedImageImportError = {
+  fileName: string
+  format: 'HEIC'
+  kind: 'unsupported-heic'
+}
+export type ImageImportError = UnsupportedImageImportError | {
+  failedCount: number
+  kind: 'remote-download'
+  totalCount: number
+}
+type ImageImportErrorHandler = (error: ImageImportError) => void
+type TauriDropEvent = TauriEvent<TauriDragDropPayload>
+export type UploadImageFileResult = string | { props: { name: string; url: string } }
+type CopyImageToVaultRequest = {
+  sourcePath: string
+  vaultPath: string
+  destination?: ImageUploadDestination
+}
+type DroppedImagesRequest = {
+  imagePaths: string[]
+  onImageImportError: ImageImportErrorHandler | undefined
+  vaultPath: string | undefined
+  onImageUrl: ImageUrlHandler | undefined
+  destination?: ImageUploadDestination
+}
+type NativeDropEventRequest = {
+  event: TauriDropEvent
+  onImageImportError: ImageImportErrorHandler | undefined
+  onImageUrl: ImageUrlHandler | undefined
+  setIsDragOver: (isDragOver: boolean) => void
+  vaultPath: string | undefined
+  destination?: ImageUploadDestination
+}
+
+export class UnsupportedImageFormatError extends Error implements UnsupportedImageImportError {
+  readonly fileName: string
+  readonly format = 'HEIC'
+  readonly kind = 'unsupported-heic'
+
+  constructor(fileName: string) {
+    super('HEIC and HEIF images are not supported by Tolaria image import yet.')
+    this.name = 'UnsupportedImageFormatError'
+    this.fileName = fileName
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+function filenameFromPath(path: string): string {
+  return path.split(/[\\/]/u).pop() || path
+}
+
+function extensionFromFilename(filename: string): string {
+  return filename.split('.').pop()?.toLowerCase() ?? ''
+}
+
+function isUnsupportedHeicFilename(filename: string): boolean {
+  return UNSUPPORTED_HEIC_EXTENSIONS.includes(extensionFromFilename(filename))
+}
+
+function unsupportedHeicImportError(fileName: string): ImageImportError {
+  return {
+    kind: 'unsupported-heic',
+    fileName,
+    format: 'HEIC',
+  }
+}
+
+function isUnsupportedHeicFile(file: File): boolean {
+  return isUnsupportedHeicFilename(file.name) || UNSUPPORTED_HEIC_MIME_TYPES.includes(file.type.toLowerCase())
+}
+
+export function isUnsupportedImageFormatError(error: unknown): error is UnsupportedImageFormatError {
+  return error instanceof UnsupportedImageFormatError
+    || (
+      isRecord(error)
+      && Reflect.get(error, 'name') === 'UnsupportedImageFormatError'
+      && Reflect.get(error, 'kind') === 'unsupported-heic'
+      && Reflect.get(error, 'format') === 'HEIC'
+      && typeof Reflect.get(error, 'fileName') === 'string'
+    )
+}
+
+function isNativeDropPayload(payload: unknown): payload is TauriDragDropPayload {
+  if (!isRecord(payload)) return false
+  const type = Reflect.get(payload, 'type')
+  if (typeof type !== 'string') return false
+  if (type !== 'drop') return true
+  return isStringArray(Reflect.get(payload, 'paths'))
+}
+
+function hasImageFiles(dt: DataTransfer): boolean {
+  for (let i = 0; i < dt.items.length; i++) {
+    const item = Reflect.get(dt.items, i) as DataTransferItem | undefined
+    if (item?.kind === 'file' && IMAGE_MIME_TYPES.includes(item.type)) return true
+  }
+  return false
+}
+
+function isImagePath(path: string): boolean {
+  return IMAGE_EXTENSIONS.includes(extensionFromFilename(path))
+}
+
+function isUnsupportedHeicPath(path: string): boolean {
+  return isUnsupportedHeicFilename(filenameFromPath(path))
+}
+
+export function emptyImageUploadResult(file: File): UploadImageFileResult {
+  return { props: { name: file.name, url: '' } }
+}
+
+function uploadErrorText(error: unknown): string {
+  if (error instanceof Error) return [error.name, error.message].filter(Boolean).join(': ')
+  if (typeof error === 'string') return error
+  if (!isRecord(error)) return ''
+
+  const name = Reflect.get(error, 'name')
+  const message = Reflect.get(error, 'message')
+  return [
+    typeof name === 'string' ? name : undefined,
+    typeof message === 'string' ? message : undefined,
+  ].filter(Boolean).join(': ')
+}
+
+function isUnreadableFileUploadError(error: unknown): boolean {
+  const text = uploadErrorText(error)
+  return text.includes('NotReadableError') || text.includes('could not be read')
+}
+
+function handleUploadFailure(file: File, error: unknown): UploadImageFileResult {
+  if (!isUnreadableFileUploadError(error)) throw error
+
+  console.warn('[image-upload] Skipped unreadable file upload:', error)
+  return emptyImageUploadResult(file)
+}
+
+function uploadedImageAssetUrl(file: File, path: string): UploadImageFileResult {
+  try {
+    return attachmentAssetUrlFromPath({ path })
+  } catch (error) {
+    console.warn('[image-upload] Failed to prepare uploaded image asset URL:', error)
+    return emptyImageUploadResult(file)
+  }
+}
+
+function readBrowserImageFile(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return file.arrayBuffer().then((buf) => {
+    const bytes = new Uint8Array(buf)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes.at(i) ?? 0)
+    return btoa(binary)
+  })
+}
+
+async function loadImageUploadDestination(
+  destination?: ImageUploadDestination,
+): Promise<ImageUploadDestination> {
+  if (destination) return destination
+  if (!isTauri()) return {}
+  try {
+    const settings = await invoke<Settings>('get_settings')
+    return imageUploadDestinationFromSettings(settings)
+  } catch {
+    return {}
+  }
+}
+
+async function uploadImageViaPicgo(
+  file: File,
+  destination: ImageUploadDestination,
+): Promise<string> {
+  const serverUrl = destination.picgoServerUrl
+  if (!serverUrl) throw new Error('PicGo server URL is missing')
+  const data = await fileToBase64(file)
+  const url = await invoke<string>('upload_image_via_picgo', {
+    serverUrl,
+    token: destination.picgoServerToken ?? null,
+    filename: file.name,
+    data,
+  })
+  trackImageUploadBackend('picgo')
+  return url
+}
+
+/** Upload an image file — PicGo when configured, else vault/attachments in Tauri, data URL in browser */
+export async function uploadImageFile(
+  file: File,
+  vaultPath?: string,
+  destination?: ImageUploadDestination,
+): Promise<UploadImageFileResult> {
+  if (isUnsupportedHeicFile(file)) throw new UnsupportedImageFormatError(file.name)
+
+  try {
+    if (isTauri()) {
+      const resolvedDestination = await loadImageUploadDestination(destination)
+      if (resolvedDestination.picgoServerUrl) {
+        return await uploadImageViaPicgo(file, resolvedDestination)
+      }
+      if (vaultPath) {
+        const base64 = await fileToBase64(file)
+        const savedPath = await invoke<string>('save_image', {
+          vaultPath,
+          filename: file.name,
+          data: base64,
+        })
+        trackImageUploadBackend('local')
+        return uploadedImageAssetUrl(file, savedPath)
+      }
+    }
+    return await readBrowserImageFile(file)
+  } catch (error) {
+    return handleUploadFailure(file, error)
+  }
+}
+
+/** Copy a dropped file (by OS path) into vault/attachments or upload via PicGo. */
+async function copyImageToVault({
+  sourcePath,
+  vaultPath,
+  destination,
+}: CopyImageToVaultRequest): Promise<string> {
+  const resolvedDestination = await loadImageUploadDestination(destination)
+  if (resolvedDestination.picgoServerUrl) {
+    const url = await invoke<string>('upload_image_path_via_picgo', {
+      serverUrl: resolvedDestination.picgoServerUrl,
+      token: resolvedDestination.picgoServerToken ?? null,
+      sourcePath,
+    })
+    trackImageUploadBackend('picgo')
+    return url
+  }
+  const savedPath = await invoke<string>('copy_image_to_vault', { vaultPath, sourcePath })
+  trackImageUploadBackend('local')
+  return attachmentAssetUrlFromPath({ path: savedPath })
+}
+
+function logDroppedImageCopyFailure(error: unknown): void {
+  console.warn('[image-drop] Failed to copy dropped image into vault:', error)
+}
+
+function reportUnsupportedDroppedImages(
+  imagePaths: string[],
+  onImageImportError: ImageImportErrorHandler | undefined,
+): void {
+  const unsupportedPath = imagePaths.find(isUnsupportedHeicPath)
+  if (!unsupportedPath) return
+
+  onImageImportError?.(unsupportedHeicImportError(filenameFromPath(unsupportedPath)))
+}
+
+function insertDroppedImages({
+  imagePaths,
+  onImageImportError,
+  vaultPath,
+  onImageUrl,
+  destination,
+}: DroppedImagesRequest): void {
+  if (imagePaths.length === 0) return
+  reportUnsupportedDroppedImages(imagePaths, onImageImportError)
+  if (!vaultPath || !onImageUrl) return
+
+  for (const sourcePath of imagePaths.filter(isImagePath)) {
+    void copyImageToVault({ sourcePath, vaultPath, destination }).then(onImageUrl, logDroppedImageCopyFailure)
+  }
+}
+
+function handleNativeDropEvent({
+  event,
+  onImageImportError,
+  onImageUrl,
+  setIsDragOver,
+  vaultPath,
+  destination,
+}: NativeDropEventRequest): void {
+  if (!isNativeDropPayload(event.payload)) {
+    setIsDragOver(false)
+    return
+  }
+  const { payload } = event
+  if (payload.type === 'drop') {
+    setIsDragOver(false)
+    insertDroppedImages({
+      imagePaths: payload.paths,
+      onImageImportError,
+      vaultPath,
+      onImageUrl,
+      destination,
+    })
+    return
+  }
+  setIsDragOver(false)
+}
+
+async function registerNativeDropListeners(
+  handler: (event: TauriDropEvent) => void,
+): Promise<UnlistenFn[]> {
+  const { getCurrentWebview } = await import('@tauri-apps/api/webview')
+  const webview = getCurrentWebview()
+  const unlisteners: UnlistenFn[] = []
+
+  try {
+    unlisteners.push(await webview.listen<TauriDragDropPayload>(TAURI_DRAG_DROP_EVENT, handler))
+    unlisteners.push(await webview.listen<TauriDragDropPayload>(TAURI_DRAG_LEAVE_EVENT, handler))
+    return unlisteners
+  } catch (error) {
+    cleanupTauriEventListeners(unlisteners)
+    throw error
+  }
+}
+
+interface UseImageDropOptions {
+  containerRef: RefObject<HTMLDivElement | null>
+  /** Called when an image-like file is recognized but not supported by Tolaria. */
+  onImageImportError?: ImageImportErrorHandler
+  /** Called with an asset URL for each image dropped via Tauri native drag-drop. */
+  onImageUrl?: (url: string) => void
+  vaultPath?: string
+}
+
+export function useImageDrop({ containerRef, onImageImportError, onImageUrl, vaultPath }: UseImageDropOptions) {
+  const [isDragOver, setIsDragOver] = useState(false)
+  const onImageImportErrorRef = useRef(onImageImportError)
+  useEffect(() => { onImageImportErrorRef.current = onImageImportError }, [onImageImportError])
+  const onImageUrlRef = useRef(onImageUrl)
+  useEffect(() => { onImageUrlRef.current = onImageUrl }, [onImageUrl])
+  const vaultPathRef = useRef(vaultPath)
+  useEffect(() => { vaultPathRef.current = vaultPath }, [vaultPath])
+
+  // HTML5 DnD visual feedback; BlockNote handles browser-mode uploads.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleDragOver = (e: DragEvent) => {
+      if (!e.dataTransfer || !hasImageFiles(e.dataTransfer)) return
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'copy'
+      setIsDragOver(true)
+    }
+
+    const handleDragLeave = (e: DragEvent) => {
+      if (!container.contains(e.relatedTarget as Node)) {
+        setIsDragOver(false)
+      }
+    }
+
+    const handleDrop = () => {
+      setIsDragOver(false)
+    }
+
+    container.addEventListener('dragover', handleDragOver)
+    container.addEventListener('dragleave', handleDragLeave)
+    container.addEventListener('drop', handleDrop)
+
+    return () => {
+      container.removeEventListener('dragover', handleDragOver)
+      container.removeEventListener('dragleave', handleDragLeave)
+      container.removeEventListener('drop', handleDrop)
+    }
+  }, [containerRef])
+
+  // Tauri native file drop intercepts OS file drops that bypass HTML5 DnD.
+  useEffect(() => {
+    if (!isTauri()) return
+
+    let unlisteners: UnlistenFn[] = []
+    let mounted = true
+
+    void (async () => {
+      try {
+        const nextUnlisteners = await registerNativeDropListeners((event) => {
+          handleNativeDropEvent({
+            event,
+            onImageImportError: onImageImportErrorRef.current,
+            onImageUrl: onImageUrlRef.current,
+            setIsDragOver,
+            vaultPath: vaultPathRef.current,
+          })
+        })
+        if (mounted) unlisteners = nextUnlisteners
+        else cleanupTauriEventListeners(nextUnlisteners)
+      } catch {
+        // Tauri webview API not available.
+      }
+    })()
+
+    return () => {
+      mounted = false
+      cleanupTauriEventListeners(unlisteners)
+      unlisteners = []
+    }
+  }, [])
+
+  return { isDragOver }
+}

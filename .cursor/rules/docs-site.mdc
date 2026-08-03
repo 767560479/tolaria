@@ -1,0 +1,21 @@
+---
+description: 文档与站点约定
+globs: "{docs,site}/**/*"
+alwaysApply: false
+---
+
+# Docs & Site
+
+## 职责
+`docs/` 面向开发者；`site/` 面向用户（VitePress，发布到 GitHub Pages）。
+
+## 入口文件
+- `docs/ARCHITECTURE.md` / `ABSTRACTIONS.md` / `GETTING-STARTED.md`
+- `docs/adr/` — ADR（只新增 supersede，不改旧 ADR）
+- `site/index.md`、`site/start/`、`site/guides/`、`site/reference/`
+- `pnpm docs:dev` / `pnpm docs:build`
+
+## 修改约定
+- 新依赖、存储策略、平台目标、核心抽象 → 新建 ADR
+- Tauri command / 新组件钩子 / 数据模型变更 → 同提交更新 ARCHITECTURE/ABSTRACTIONS
+- 用户可见安装/上手说明优先改 `site/`，不要只改 README

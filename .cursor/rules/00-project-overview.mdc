@@ -1,0 +1,46 @@
+---
+description: Tolaria 项目地图与关键入口
+alwaysApply: true
+---
+
+# Tolaria
+
+## 用途
+跨平台桌面 Markdown 知识库应用（Tauri + React）：files-first、git-first、离线优先；vault 是纯 markdown + YAML frontmatter。
+
+## 关键入口（改功能前先读）
+- `docs/ARCHITECTURE.md` — 系统结构、数据流、状态存放约定
+- `docs/ABSTRACTIONS.md` — 核心抽象与模型
+- `docs/GETTING-STARTED.md` — 代码导航与本地运行
+- `docs/adr/` — 架构决策；结构性改动前先查
+- `AGENTS.md` — Agent 开发流程、质量门禁、UI/QA 约定
+
+## 目录结构
+- `src/` — React 前端（组件、hooks、lib、locales）
+- `src-tauri/` — Rust/Tauri 后端（vault、git、AI 直连模型）
+- `site/` — 用户文档（VitePress → GitHub Pages）
+- `docs/` — 内部技术文档与 ADR
+- `tests/`、`e2e/` — Playwright smoke / 回归 / 旧 e2e
+- `demo-vault-v2/` — 默认 QA fixture（勿污染后提交）
+- `scripts/` — 构建、覆盖率、Codacy、性能等脚本
+
+## 常用命令
+- Node：**Volta pin `22.19.0`**（见 `package.json` → `volta`）；进仓库目录后应自动用 Node 22
+- 运行（mock）：`pnpm install && pnpm dev`
+- 运行（原生）：`pnpm tauri dev`
+- 测试：`pnpm test` / `pnpm test:coverage`；Rust：`cargo test`
+- Lint：`pnpm lint`；文案：`pnpm l10n:translate` / `pnpm l10n:validate`
+- Smoke：`pnpm playwright:smoke`
+
+## 修改约定
+- 日常功能推 `origin/alpha`（无 PR 流程）；任务完成以 push 成功为准
+- `main` 为 Stable 基线；推广正式版：merge `alpha` → `main` 后推 `stable-vYYYY.M.D` tag
+- 发布：推 `alpha` → Alpha prerelease；推 `stable-v*` → Stable Release（Windows NSIS，无签名）
+- UI 用 shadcn/ui；用户文案进 `src/lib/locales/en.json` 再翻译
+- 避免无目的全仓扫描；按模块 rule 定位
+
+## 禁止 / 注意
+- 勿提交 demo-vault 临时脏数据；勿把 `~/Laputa/` 测试笔记推远程
+- 勿降低 `.codescene-thresholds`；勿 `--no-verify`
+- secrets / `.env`、生成物、lock 文件勿随意改
+- 当前发布不需要签名 Secrets；Windows SmartScreen 警告属预期

@@ -1,0 +1,27 @@
+---
+description: Tauri/Rust 后端约定与入口
+globs: src-tauri/**/*
+alwaysApply: false
+---
+
+# Tauri Backend (`src-tauri/`)
+
+## 职责
+原生壳：vault 文件系统、git、frontmatter、直连 AI 模型（`ai_models`）、应用配置与更新。
+
+## 入口文件
+- `src-tauri/src/` — Rust 源码根
+- `src-tauri/src/commands/` — 前端可 invoke 的命令
+- `src-tauri/src/vault/` — vault 读写与索引
+- `src-tauri/src/git/` — git 集成
+- `src-tauri/src/frontmatter/` — YAML frontmatter
+- `src-tauri/src/ai_models.rs` — 直连模型流式请求与 provider 密钥
+- `src-tauri/resources/app-config-policy.json` — 安装级配置路径策略
+- `src-tauri/tauri.conf.json` — 应用配置
+
+## 修改约定
+- 文件系统是唯一真相；缓存/状态必须可从磁盘重建
+- Vault 相关展示/组织偏好写入 vault；安装级配置进 app config
+- 新 Tauri command 或数据模型变更时同步更新 `docs/ARCHITECTURE.md` / `ABSTRACTIONS.md`
+- Rust 行覆盖率门禁 ≥85%（`cargo llvm-cov ... --fail-under-lines 85`）
+- 禁止无理由 `#[allow(...)]`

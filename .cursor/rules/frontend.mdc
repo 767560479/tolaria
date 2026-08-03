@@ -1,0 +1,25 @@
+---
+description: React 前端约定与入口
+globs: src/**/*
+alwaysApply: false
+---
+
+# Frontend (`src/`)
+
+## 职责
+四栏 Bear 风格 UI：笔记列表、编辑器、侧栏、属性面板；通过 Tauri invoke 读写 vault。
+
+## 入口文件
+- `src/main.tsx` / `src/App.tsx` — 应用启动与根布局
+- `src/components/` — UI（`ui/`=shadcn；`editor-content/`、`sidebar/`、`note-list/` 等）
+- `src/hooks/` — 命令、快捷键、编辑器状态（`appCommand*`、`editor*`）
+- `src/lib/` — 业务逻辑、AI agent、locales
+- `src/mock-tauri/` — 浏览器 mock；不能替代原生 QA
+- `src/types.ts` / `src/types/` — 共享类型
+
+## 修改约定
+- 交互控件必须用 shadcn（`Input`/`Select`/`Button`/`Dialog` 等），禁止原生表单控件
+- 新增文案：改 `src/lib/locales/en.json` → `pnpm l10n:translate`
+- 有意义的用户行为加 PostHog 事件；避免 PII / 笔记正文
+- 优先复用 `src/components/` 已有 picker/combobox/emoji/color 组件
+- Vitest 放同目录 `*.test.ts(x)`；覆盖率门禁 ≥70%

@@ -1,0 +1,23 @@
+---
+description: 测试与 QA 约定
+globs: "{tests,e2e}/**/*"
+alwaysApply: false
+---
+
+# Tests & QA
+
+## 职责
+Playwright 覆盖核心用户流；Vitest/cargo 做单元与覆盖率；demo vault 做本地 QA。
+
+## 入口文件
+- `tests/smoke/` — 预推送核心 smoke（`@smoke` 仅核心流）
+- `tests/integration/` — 集成测试
+- `e2e/` — 较旧/扩展 E2E
+- `playwright.smoke.config.ts` / `playwright.config.ts`
+- `demo-vault-v2/` — 默认 fixture
+
+## 修改约定
+- 仅 vault 打开、笔记 CRUD、搜索、wikilink、git、冲突等写 smoke
+- Smoke 套件应保持短；全量用 `pnpm playwright:regression`
+- QA 后清空 demo-vault 临时文件；`git status -- demo-vault demo-vault-v2` 应干净
+- 优先行为级、确定性测试；修 flaky 优先于堆新测
