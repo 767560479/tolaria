@@ -10,7 +10,7 @@ interface FolderFileRowProps {
   entry: VaultEntry
   isActive: boolean
   onOpen: (entry: VaultEntry) => void
-  onContextMenu?: (entry: VaultEntry, event: ReactMouseEvent) => void
+  onContextMenu?: (entry: VaultEntry, event: ReactMouseEvent<HTMLElement>) => void
 }
 
 export function FolderFileRow({ depth, entry, isActive, onOpen, onContextMenu }: FolderFileRowProps) {

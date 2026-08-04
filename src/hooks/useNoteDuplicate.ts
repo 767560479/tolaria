@@ -27,7 +27,7 @@ export function useNoteDuplicate({
   onOpenEntry,
 }: {
   vaultPath: string
-  reloadVault: () => Promise<void> | void
+  reloadVault: () => Promise<unknown> | unknown
   setToastMessage: (message: string | null) => void
   onOpenEntry: (entry: VaultEntry) => void | Promise<void>
 }) {
@@ -36,7 +36,7 @@ export function useNoteDuplicate({
     try {
       const result = await performDuplicateNote(entry.path, sourceVaultPath)
       trackEvent('note_duplicated')
-      await reloadVault()
+      await Promise.resolve(reloadVault())
       const filename = filenameFromPath(result.new_path)
       setToastMessage(`Duplicated “${entry.filename || entry.title}”`)
       await onOpenEntry({
