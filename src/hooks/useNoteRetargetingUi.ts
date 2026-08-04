@@ -90,14 +90,23 @@ function hasFolderRetargetDestination(
     && folders.some((folder) => canDropNoteOnFolder(activeEntry.path, folder.path))
 }
 
+function openDialogForEntry(
+  setDialogState: Dispatch<SetStateAction<DialogState>>,
+  notePath: string | null | undefined,
+  enabled: boolean,
+  kind: 'type' | 'folder',
+) {
+  if (!notePath || !enabled) return
+  setDialogState({ kind, notePath })
+}
+
 function openDialogForActiveEntry(
   setDialogState: Dispatch<SetStateAction<DialogState>>,
   activeEntry: VaultEntry | null,
   enabled: boolean,
   kind: 'type' | 'folder',
 ) {
-  if (!activeEntry || !enabled) return
-  setDialogState({ kind, notePath: activeEntry.path })
+  openDialogForEntry(setDialogState, activeEntry?.path, enabled, kind)
 }
 
 async function selectFromDialogState(
@@ -134,6 +143,10 @@ function useNoteRetargetDialogState({
     openDialogForActiveEntry(setDialogState, activeEntry, canMoveActiveNoteToFolder, 'folder')
   }, [activeEntry, canMoveActiveNoteToFolder])
 
+  const openMoveNoteToFolderDialogFor = useCallback((notePath: string) => {
+    openDialogForEntry(setDialogState, notePath, true, 'folder')
+  }, [])
+
   const closeDialog = useCallback(() => {
     setDialogState(null)
   }, [])
@@ -150,6 +163,7 @@ function useNoteRetargetDialogState({
     dialogState,
     openChangeNoteTypeDialog,
     openMoveNoteToFolderDialog,
+    openMoveNoteToFolderDialogFor,
     closeDialog,
     selectType,
     selectFolder,
@@ -175,6 +189,7 @@ function buildNoteRetargetingUiState(params: {
   canMoveActiveNoteToFolder: boolean
   openChangeNoteTypeDialog: () => void
   openMoveNoteToFolderDialog: () => void
+  openMoveNoteToFolderDialogFor: (notePath: string) => void
   canDropNoteOnFolder: (notePath: string, folderPath: string) => boolean
   moveIntoFolder: (notePath: string, folderPath: string) => Promise<'updated' | 'noop' | 'error'>
   typeOptions: RetargetOption[]
@@ -191,6 +206,7 @@ function buildNoteRetargetingUiState(params: {
     canMoveActiveNoteToFolder: params.canMoveActiveNoteToFolder,
     openChangeNoteTypeDialog: params.openChangeNoteTypeDialog,
     openMoveNoteToFolderDialog: params.openMoveNoteToFolderDialog,
+    openMoveNoteToFolderDialogFor: params.openMoveNoteToFolderDialogFor,
     canDropNoteOnFolder: params.canDropNoteOnFolder,
     moveIntoFolder: params.moveIntoFolder,
     typeOptions: params.typeOptions,
@@ -212,14 +228,14 @@ export function useNoteRetargetingUi({
   }, [availableFolders, vaultPath])
   const canChangeActiveNoteType = hasTypeRetargetDestination(activeEntry, activeNoteBlocked, availableTypes)
   const canMoveActiveNoteToFolder = hasFolderRetargetDestination(activeEntry, activeNoteBlocked, folderDestinations, canDropNoteOnFolder)
-  const { dialogState, openChangeNoteTypeDialog, openMoveNoteToFolderDialog, closeDialog, selectType, selectFolder } = useNoteRetargetDialogState({
+  const { dialogState, openChangeNoteTypeDialog, openMoveNoteToFolderDialog, openMoveNoteToFolderDialogFor, closeDialog, selectType, selectFolder } = useNoteRetargetDialogState({
     activeEntry, canChangeActiveNoteType, canMoveActiveNoteToFolder, changeNoteType, moveIntoFolder,
   })
   const dialogEntry = useMemo(() => resolveDialogEntry(dialogState, entries, activeEntry), [activeEntry, dialogState, entries])
   const { typeOptions, folderOptions } = buildDialogOptions(availableTypes, folderDestinations, dialogEntry, vaultPath)
   return buildNoteRetargetingUiState({
     dialogState, dialogEntry, canChangeActiveNoteType, canMoveActiveNoteToFolder,
-    openChangeNoteTypeDialog, openMoveNoteToFolderDialog, canDropNoteOnFolder, moveIntoFolder,
+    openChangeNoteTypeDialog, openMoveNoteToFolderDialog, openMoveNoteToFolderDialogFor, canDropNoteOnFolder, moveIntoFolder,
     typeOptions, folderOptions, closeDialog, selectType, selectFolder,
   })
 }

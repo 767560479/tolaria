@@ -229,6 +229,7 @@ macro_rules! app_invoke_handler {
             commands::get_note_content,
             commands::validate_note_content,
             commands::create_note_content,
+            commands::duplicate_note,
             commands::save_note_content,
             commands::update_frontmatter,
             commands::delete_frontmatter_property,

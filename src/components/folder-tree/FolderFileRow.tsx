@@ -3,15 +3,17 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { VaultEntry } from '../../types'
 import { getFolderDepthIndent, FOLDER_ROW_CONTENT_INSET } from './folderTreeLayout'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 
 interface FolderFileRowProps {
   depth: number
   entry: VaultEntry
   isActive: boolean
   onOpen: (entry: VaultEntry) => void
+  onContextMenu?: (entry: VaultEntry, event: ReactMouseEvent) => void
 }
 
-export function FolderFileRow({ depth, entry, isActive, onOpen }: FolderFileRowProps) {
+export function FolderFileRow({ depth, entry, isActive, onOpen, onContextMenu }: FolderFileRowProps) {
   const depthIndent = getFolderDepthIndent(depth)
   const label = entry.filename || entry.title
 
@@ -25,6 +27,7 @@ export function FolderFileRow({ depth, entry, isActive, onOpen }: FolderFileRowP
       )}
       style={{ paddingLeft: depthIndent, borderRadius: 4 }}
       data-testid={`folder-file:${entry.path}`}
+      onContextMenu={(event) => onContextMenu?.(entry, event)}
     >
       <Button
         type="button"

@@ -4,7 +4,8 @@ use crate::vault::{self, FolderNode, VaultEntry};
 use std::path::{Path, PathBuf};
 
 use super::boundary::{
-    with_boundary, with_existing_paths, with_requested_root, with_validated_path, ValidatedPathMode,
+    with_boundary, with_existing_path_in_requested_vault, with_existing_paths, with_requested_root,
+    with_validated_path, ValidatedPathMode,
 };
 
 const LOCALIZED_ERROR_PREFIX: &str = "tolaria:i18n-error:";
@@ -247,6 +248,20 @@ pub fn create_note_content(
 ) -> Result<(), String> {
     with_writable_note_path(path, vault_path, |validated_path| {
         vault::create_note_content(validated_path, &content)
+    })
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DuplicateNoteCommandArgs {
+    vault_path: String,
+    path: String,
+}
+
+#[tauri::command]
+pub fn duplicate_note(args: DuplicateNoteCommandArgs) -> Result<vault::DuplicateNoteResult, String> {
+    with_existing_path_in_requested_vault(&args.vault_path, &args.path, |_root, validated_path| {
+        vault::duplicate_note(validated_path)
     })
 }
 

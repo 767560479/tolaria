@@ -571,6 +571,16 @@ export function useTabManagement(options: TabManagementOptions = {}) {
     syncActiveTabPath(activeTabPathRef, setActiveTabPath, nextPath)
   }, [])
 
+  /** Keep only the given tab; activate it if the previous active tab was closed. */
+  const handleCloseOtherTabs = useCallback((path: string) => {
+    const kept = tabsRef.current.filter((tab) => notePathsMatch(tab.entry.path, path))
+    if (kept.length === 0) return
+    tabsRef.current = kept
+    setTabs(kept)
+    requestedActiveTabPathRef.current = kept[0].entry.path
+    syncActiveTabPath(activeTabPathRef, setActiveTabPath, kept[0].entry.path)
+  }, [])
+
   /** Open a tab with known content — no IPC round-trip. Used for newly created notes. */
   const openTabWithContent = useCallback((entry: VaultEntry, content: string) => {
     const openEntry = normalizeOpenEntry(entry)
@@ -631,6 +641,7 @@ export function useTabManagement(options: TabManagementOptions = {}) {
     openTabWithContent,
     handleSwitchTab,
     handleCloseTab,
+    handleCloseOtherTabs,
     handleReplaceActiveTab,
     closeAllTabs,
   }

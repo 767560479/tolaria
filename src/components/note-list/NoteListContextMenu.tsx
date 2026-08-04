@@ -8,7 +8,7 @@ import {
 import type { AppLocale } from '../../lib/i18n'
 import { trackEvent } from '../../lib/telemetry'
 import type { VaultEntry } from '../../types'
-import { isMarkdownEntry } from '../../utils/typeDefinitions'
+import { hasNoteContextMenuActions } from '../note-context-menu/noteContextMenuItems'
 import { NoteListContextMenuNode, NoteListRenameDialog } from './NoteListContextMenuView'
 
 export type NoteListContextMenuState = {
@@ -22,6 +22,8 @@ interface NoteListContextMenuParams {
   onEnterNeighborhood?: (entry: VaultEntry) => void
   onOpenInNewWindow?: (entry: VaultEntry) => void
   onRenameFilename?: (path: string, newFilenameStem: string) => void
+  onMoveToFolder?: (entry: VaultEntry) => void
+  onDuplicate?: (entry: VaultEntry) => void
   onArchivePaths?: (paths: string[]) => void
   onDeletePaths?: (paths: string[]) => void
   onExportPdf?: (entry: VaultEntry) => void
@@ -33,41 +35,13 @@ interface NoteListContextMenuParams {
   onCopyGitUrl?: (entry: VaultEntry) => void
 }
 
-function hasNoteListContextActions({
-  entry,
-  onEnterNeighborhood,
-  onOpenInNewWindow,
-  onRenameFilename,
-  onArchivePaths,
-  onDeletePaths,
-  onExportPdf,
-  onToggleFavorite,
-  onToggleOrganized,
-  onRevealFile,
-  onCopyFilePath,
-  canCopyGitUrl,
-  onCopyGitUrl,
-}: NoteListContextMenuParams & { entry: VaultEntry }) {
-  return [
-    onOpenInNewWindow,
-    onRenameFilename && isMarkdownEntry(entry),
-    onEnterNeighborhood && entry.fileKind !== 'binary',
-    onExportPdf && isMarkdownEntry(entry),
-    onArchivePaths && !entry.archived,
-    onDeletePaths,
-    onToggleFavorite,
-    onToggleOrganized && isMarkdownEntry(entry),
-    onRevealFile,
-    onCopyFilePath,
-    onCopyGitUrl && canCopyGitUrl?.(entry),
-  ].some(Boolean)
-}
-
 export function useNoteListContextMenu({
   locale = 'en',
   onEnterNeighborhood,
   onOpenInNewWindow,
   onRenameFilename,
+  onMoveToFolder,
+  onDuplicate,
   onArchivePaths,
   onDeletePaths,
   onExportPdf,
@@ -109,11 +83,13 @@ export function useNoteListContextMenu({
   }, [ctxMenu, closeContextMenu])
 
   const handleNoteContextMenu = useCallback((entry: VaultEntry, event: ReactMouseEvent) => {
-    if (!hasNoteListContextActions({
+    if (!hasNoteContextMenuActions({
       entry,
       onEnterNeighborhood,
       onOpenInNewWindow,
-      onRenameFilename,
+      onRequestRename: onRenameFilename ? requestRename : undefined,
+      onMoveToFolder,
+      onDuplicate,
       onArchivePaths,
       onDeletePaths,
       onExportPdf,
@@ -133,14 +109,17 @@ export function useNoteListContextMenu({
     onCopyFilePath,
     canCopyGitUrl,
     onDeletePaths,
+    onDuplicate,
     onEnterNeighborhood,
     onExportPdf,
+    onMoveToFolder,
     onRenameFilename,
     onOpenInNewWindow,
     onCopyGitUrl,
     onRevealFile,
     onToggleFavorite,
     onToggleOrganized,
+    requestRename,
   ])
 
   const contextMenuNode = (
@@ -152,6 +131,8 @@ export function useNoteListContextMenu({
         onEnterNeighborhood={onEnterNeighborhood}
         onOpenInNewWindow={onOpenInNewWindow}
         onRequestRename={onRenameFilename ? requestRename : undefined}
+        onMoveToFolder={onMoveToFolder}
+        onDuplicate={onDuplicate}
         onArchivePaths={onArchivePaths}
         onDeletePaths={onDeletePaths}
         onExportPdf={onExportPdf}

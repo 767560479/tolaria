@@ -20,6 +20,24 @@ import { SidebarGroupHeader } from './sidebar/SidebarGroupHeader'
 import { translate, type AppLocale } from '../lib/i18n'
 import type { FolderFileActions } from '../hooks/useFileActions'
 import type { AllNotesFileVisibility } from '../utils/allNotesFileVisibility'
+import { useNoteListContextMenu } from './note-list/NoteListContextMenu'
+
+export interface FolderTreeNoteMenuProps {
+  onEnterNeighborhood?: (entry: VaultEntry) => void
+  onOpenInNewWindow?: (entry: VaultEntry) => void
+  onRenameFilename?: (path: string, newFilenameStem: string) => void
+  onMoveToFolder?: (entry: VaultEntry) => void
+  onDuplicate?: (entry: VaultEntry) => void
+  onArchivePaths?: (paths: string[]) => void
+  onDeletePaths?: (paths: string[]) => void
+  onExportPdf?: (entry: VaultEntry) => void
+  onToggleFavorite?: (path: string) => void
+  onToggleOrganized?: (path: string) => void
+  onRevealFile?: (path: string) => void
+  onCopyFilePath?: (path: string) => void
+  canCopyGitUrl?: (entry: VaultEntry) => boolean
+  onCopyGitUrl?: (entry: VaultEntry) => void
+}
 
 interface FolderTreeProps {
   folders: FolderNode[]
@@ -33,6 +51,7 @@ interface FolderTreeProps {
   onRenameFolder?: (folderPath: string, nextName: string) => Promise<boolean> | boolean
   onDeleteFolder?: (folderPath: string) => void
   folderFileActions?: FolderFileActions
+  noteFileMenu?: FolderTreeNoteMenuProps
   renamingFolderPath?: string | null
   onStartRenameFolder?: (folderPath: string) => void
   onCancelRenameFolder?: () => void
@@ -71,6 +90,7 @@ interface FolderTreeBodyProps extends Pick<
   sectionCollapsed: boolean
   toggleFolder: (path: string) => void
   onOpenMenu: (node: FolderNode, event: ReactMouseEvent<HTMLElement>) => void
+  onFileContextMenu?: (entry: VaultEntry, event: ReactMouseEvent<HTMLElement>) => void
 }
 
 function vaultRootLabel(vaultRootPath: string, locale: AppLocale): string {
@@ -160,6 +180,7 @@ export const FolderTree = memo(function FolderTree({
   onRenameFolder,
   onDeleteFolder,
   folderFileActions,
+  noteFileMenu,
   renamingFolderPath,
   onStartRenameFolder,
   onCancelRenameFolder,
@@ -206,6 +227,10 @@ export const FolderTree = memo(function FolderTree({
     folderFileActions,
     onCreateFolder: onCreateFolder ? openCreateFormForParent : undefined,
     onStartRenameFolder,
+  })
+  const noteFileContextMenu = useNoteListContextMenu({
+    locale,
+    ...noteFileMenu,
   })
 
   const handleCloseCreateForm = useCallback(() => {
@@ -259,6 +284,7 @@ export const FolderTree = memo(function FolderTree({
         renamingFolderPath={renamingFolderPath}
         onCanDropNote={onCanDropNote}
         onMoveNoteToFolder={onMoveNoteToFolder}
+        onFileContextMenu={noteFileMenu ? noteFileContextMenu.handleNoteContextMenu : undefined}
         rootPath={vaultRootPath}
         sectionCollapsed={sectionCollapsed}
         selection={selection}
@@ -275,6 +301,7 @@ export const FolderTree = memo(function FolderTree({
         onRename={handleRenameFromMenu}
         locale={locale}
       />
+      {noteFileMenu ? noteFileContextMenu.contextMenuNode : null}
     </div>
   )
 })
@@ -299,6 +326,7 @@ function FolderTreeBody({
   onStartRenameFolder,
   onCanDropNote,
   onMoveNoteToFolder,
+  onFileContextMenu,
   renamingFolderPath,
   rootPath,
   sectionCollapsed,
@@ -330,6 +358,7 @@ function FolderTreeBody({
           onStartRenameFolder={onStartRenameFolder}
           onCanDropNote={onCanDropNote}
           onMoveNoteToFolder={onMoveNoteToFolder}
+          onFileContextMenu={onFileContextMenu}
           onToggle={toggleFolder}
           onCancelRenameFolder={onCancelRenameFolder}
           locale={locale}

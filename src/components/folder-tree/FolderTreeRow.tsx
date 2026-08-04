@@ -31,6 +31,7 @@ interface FolderTreeRowProps {
   onCancelRenameFolder?: () => void
   onCanDropNote?: (notePath: string, folderPath: string) => boolean
   onMoveNoteToFolder?: (notePath: string, folderPath: string) => Promise<unknown> | unknown
+  onFileContextMenu?: (entry: VaultEntry, event: ReactMouseEvent<HTMLElement>) => void
   locale?: AppLocale
   renamingFolderPath?: string | null
   rootPath?: string
@@ -161,6 +162,7 @@ function FolderChildren({
   onCancelRenameFolder,
   onCanDropNote,
   onMoveNoteToFolder,
+  onFileContextMenu,
   locale,
   renamingFolderPath,
   rootPath,
@@ -206,6 +208,7 @@ function FolderChildren({
           onCancelRenameFolder={onCancelRenameFolder}
           onCanDropNote={onCanDropNote}
           onMoveNoteToFolder={onMoveNoteToFolder}
+          onFileContextMenu={onFileContextMenu}
           locale={locale}
           renamingFolderPath={renamingFolderPath}
           rootPath={rootPath}
@@ -224,6 +227,7 @@ function FolderChildren({
               : { kind: 'folder', path: node.path })
             onSelectNote?.(file)
           }}
+          onContextMenu={onFileContextMenu}
         />
       ))}
     </div>
@@ -275,6 +279,7 @@ export const FolderTreeRow = memo(function FolderTreeRow({
   onCancelRenameFolder,
   onCanDropNote,
   onMoveNoteToFolder,
+  onFileContextMenu,
   locale = 'en',
   renamingFolderPath,
   rootPath,
@@ -366,6 +371,7 @@ export const FolderTreeRow = memo(function FolderTreeRow({
         onCancelRenameFolder={onCancelRenameFolder}
         onCanDropNote={onCanDropNote}
         onMoveNoteToFolder={onMoveNoteToFolder}
+        onFileContextMenu={onFileContextMenu}
         locale={locale}
         renamingFolderPath={renamingFolderPath}
         rootPath={rootPath}

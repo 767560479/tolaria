@@ -344,6 +344,8 @@ interface UseNoteListInteractionStateParams {
   onOpenDeletedNote?: (entry: DeletedNoteEntry) => void
   onOpenInNewWindow?: (entry: VaultEntry) => void
   onRenameFilename?: (path: string, newFilenameStem: string) => void
+  onMoveToFolder?: (entry: VaultEntry) => void
+  onDuplicate?: (entry: VaultEntry) => void
   onExportPdf?: (entry: VaultEntry) => void
   onToggleFavorite?: (path: string) => void
   onToggleOrganized?: (path: string) => void
@@ -376,6 +378,8 @@ function useNoteListInteractionState({
   onOpenDeletedNote,
   onOpenInNewWindow,
   onRenameFilename,
+  onMoveToFolder,
+  onDuplicate,
   onExportPdf,
   onToggleFavorite,
   onToggleOrganized,
@@ -396,6 +400,8 @@ function useNoteListInteractionState({
     onEnterNeighborhood,
     onOpenInNewWindow,
     onRenameFilename,
+    onMoveToFolder,
+    onDuplicate,
     onExportPdf,
     onArchivePaths: onBulkArchive,
     onDeletePaths: onBulkDeletePermanently,
@@ -563,6 +569,8 @@ export interface NoteListProps {
   updateEntry?: (path: string, patch: Partial<VaultEntry>) => void
   onOpenInNewWindow?: (entry: VaultEntry) => void
   onRenameFilename?: (path: string, newFilenameStem: string) => void
+  onMoveToFolder?: (entry: VaultEntry) => void
+  onDuplicate?: (entry: VaultEntry) => void
   onExportPdf?: (entry: VaultEntry) => void
   onToggleFavorite?: (path: string) => void
   onToggleOrganized?: (path: string) => void
@@ -701,6 +709,8 @@ export function useNoteListModel({
   updateEntry,
   onOpenInNewWindow,
   onRenameFilename,
+  onMoveToFolder,
+  onDuplicate,
   onExportPdf,
   onToggleFavorite,
   onToggleOrganized,
@@ -766,6 +776,8 @@ export function useNoteListModel({
     onOpenDeletedNote,
     onOpenInNewWindow,
     onRenameFilename,
+    onMoveToFolder,
+    onDuplicate,
     onExportPdf,
     onToggleFavorite,
     onToggleOrganized,

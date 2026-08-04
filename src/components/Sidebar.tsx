@@ -6,7 +6,7 @@ import {
   KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { FolderTree } from './FolderTree'
+import { FolderTree, type FolderTreeNoteMenuProps } from './FolderTree'
 import {
   computeReorder,
   useSidebarCollapsed,
@@ -60,6 +60,7 @@ interface SidebarProps {
   onRenameFolder?: (folderPath: string, nextName: string) => Promise<boolean> | boolean
   onDeleteFolder?: (folderPath: string) => void
   folderFileActions?: FolderFileActions
+  noteFileMenu?: FolderTreeNoteMenuProps
   renamingFolderPath?: string | null
   onStartRenameFolder?: (folderPath: string) => void
   onCancelRenameFolder?: () => void
@@ -97,6 +98,7 @@ interface SidebarNavigationProps extends Pick<
   | 'onRenameFolder'
   | 'onDeleteFolder'
   | 'folderFileActions'
+  | 'noteFileMenu'
   | 'renamingFolderPath'
   | 'onStartRenameFolder'
   | 'onCancelRenameFolder'
@@ -187,6 +189,7 @@ type SidebarFoldersNavigationProps = Pick<
   | 'onRenameFolder'
   | 'onDeleteFolder'
   | 'folderFileActions'
+  | 'noteFileMenu'
   | 'renamingFolderPath'
   | 'onStartRenameFolder'
   | 'onCancelRenameFolder'
@@ -357,6 +360,7 @@ function SidebarFoldersNavigation({
   onRenameFolder,
   onDeleteFolder,
   folderFileActions,
+  noteFileMenu,
   renamingFolderPath,
   onStartRenameFolder,
   onCancelRenameFolder,
@@ -393,6 +397,7 @@ function SidebarFoldersNavigation({
       onRenameFolder={onRenameFolder}
       onDeleteFolder={onDeleteFolder}
       folderFileActions={folderFileActions}
+      noteFileMenu={noteFileMenu}
       renamingFolderPath={renamingFolderPath}
       onStartRenameFolder={onStartRenameFolder}
       onCancelRenameFolder={onCancelRenameFolder}
@@ -519,6 +524,7 @@ function SidebarNavigation(props: SidebarNavigationProps) {
         onRenameFolder={props.onRenameFolder}
         onDeleteFolder={props.onDeleteFolder}
         folderFileActions={props.folderFileActions}
+        noteFileMenu={props.noteFileMenu}
         renamingFolderPath={props.renamingFolderPath}
         onStartRenameFolder={props.onStartRenameFolder}
         onCancelRenameFolder={props.onCancelRenameFolder}
@@ -662,6 +668,7 @@ function SidebarRuntimeNavigation({
       onRenameFolder={props.onRenameFolder}
       onDeleteFolder={props.onDeleteFolder}
       folderFileActions={props.folderFileActions}
+      noteFileMenu={props.noteFileMenu}
       renamingFolderPath={props.renamingFolderPath}
       onStartRenameFolder={props.onStartRenameFolder}
       onCancelRenameFolder={props.onCancelRenameFolder}

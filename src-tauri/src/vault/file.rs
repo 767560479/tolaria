@@ -194,9 +194,125 @@ pub fn create_note_content(path: &str, content: &str) -> Result<(), String> {
         .map_err(|e| note_io_error(NoteIoOperation::Save, NotePathDisplay::new(path), &e))
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct DuplicateNoteResult {
+    pub new_path: String,
+}
+
+fn duplicate_candidate_path(parent: &Path, stem: &str, extension: &str, index: Option<u32>) -> PathBuf {
+    let suffix = match index {
+        None => format!("{stem} copy"),
+        Some(n) => format!("{stem} copy {n}"),
+    };
+    if extension.is_empty() {
+        parent.join(suffix)
+    } else {
+        parent.join(format!("{suffix}.{extension}"))
+    }
+}
+
+fn unique_duplicate_path(source: &Path) -> Result<PathBuf, String> {
+    let parent = source.parent().ok_or_else(|| {
+        format!("Cannot determine parent directory for {}", source.display())
+    })?;
+    let stem = source
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| format!("Cannot determine filename for {}", source.display()))?;
+    let extension = source
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("");
+
+    let first = duplicate_candidate_path(parent, stem, extension, None);
+    if !first.exists() {
+        return Ok(first);
+    }
+    for index in 2u32..=10_000 {
+        let candidate = duplicate_candidate_path(parent, stem, extension, Some(index));
+        if !candidate.exists() {
+            return Ok(candidate);
+        }
+    }
+    Err(format!(
+        "Could not find a unique duplicate name for {}",
+        source.display()
+    ))
+}
+
+/// Copy a vault file to a unique sibling path (`name copy.ext`, then `name copy 2.ext`, …).
+pub fn duplicate_note(path: &str) -> Result<DuplicateNoteResult, String> {
+    let normalized_path = RawNotePath(path).normalized_for_file_io();
+    let source = Path::new(normalized_path.as_ref());
+    if !source.exists() {
+        return Err(format!("File does not exist: {path}"));
+    }
+    if !source.is_file() {
+        return Err(format!("Path is not a file: {path}"));
+    }
+
+    let destination = unique_duplicate_path(source)?;
+    let bytes = read_existing_note_bytes(source)?;
+    let destination_display = destination.to_string_lossy();
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&destination)
+        .map_err(|e| match e.kind() {
+            ErrorKind::AlreadyExists => {
+                format!("File already exists: {}", destination.display())
+            }
+            _ => note_io_error(
+                NoteIoOperation::Create,
+                NotePathDisplay::new(destination_display.as_ref()),
+                &e,
+            ),
+        })?;
+    file.write_all(&bytes).map_err(|e| {
+        note_io_error(
+            NoteIoOperation::Save,
+            NotePathDisplay::new(destination_display.as_ref()),
+            &e,
+        )
+    })?;
+
+    Ok(DuplicateNoteResult {
+        new_path: destination_display.into_owned(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn duplicate_note_creates_copy_sibling() {
+        let dir = TempDir::new().unwrap();
+        let source = dir.path().join("alpha.md");
+        fs::write(&source, b"# Alpha\n").unwrap();
+
+        let result = duplicate_note(source.to_str().unwrap()).unwrap();
+        let expected = dir.path().join("alpha copy.md");
+        assert_eq!(Path::new(&result.new_path), expected.as_path());
+        assert_eq!(fs::read(&expected).unwrap(), b"# Alpha\n");
+        assert!(source.exists());
+    }
+
+    #[test]
+    fn duplicate_note_increments_when_copy_exists() {
+        let dir = TempDir::new().unwrap();
+        let source = dir.path().join("alpha.md");
+        fs::write(&source, b"one").unwrap();
+        fs::write(dir.path().join("alpha copy.md"), b"existing").unwrap();
+
+        let result = duplicate_note(source.to_str().unwrap()).unwrap();
+        assert_eq!(
+            Path::new(&result.new_path),
+            dir.path().join("alpha copy 2.md").as_path()
+        );
+    }
 
     #[test]
     fn formats_windows_invalid_path_syntax_as_recoverable_save_error() {

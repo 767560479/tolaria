@@ -31,4 +31,34 @@ describe('EditorTabBar', () => {
     fireEvent.click(screen.getByLabelText('Close a.md'))
     expect(onCloseTab).toHaveBeenCalledWith('a.md')
   })
+
+  it('opens a context menu with close, close others, and close all', () => {
+    const onCloseTab = vi.fn()
+    const onCloseOtherTabs = vi.fn()
+    const onCloseAllTabs = vi.fn()
+    render(
+      <EditorTabBar
+        tabs={[tab('a.md'), tab('b.md')]}
+        activeTabPath="a.md"
+        onSelectTab={vi.fn()}
+        onCloseTab={onCloseTab}
+        onCloseOtherTabs={onCloseOtherTabs}
+        onCloseAllTabs={onCloseAllTabs}
+      />,
+    )
+
+    fireEvent.contextMenu(screen.getByTestId('editor-tab:a.md'))
+    expect(screen.getByTestId('editor-tab-context-menu')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('editor-tab-menu-close-others'))
+    expect(onCloseOtherTabs).toHaveBeenCalledWith('a.md')
+
+    fireEvent.contextMenu(screen.getByTestId('editor-tab:b.md'))
+    fireEvent.click(screen.getByTestId('editor-tab-menu-close-all'))
+    expect(onCloseAllTabs).toHaveBeenCalledOnce()
+
+    fireEvent.contextMenu(screen.getByTestId('editor-tab:b.md'))
+    fireEvent.click(screen.getByTestId('editor-tab-menu-close'))
+    expect(onCloseTab).toHaveBeenCalledWith('b.md')
+  })
 })

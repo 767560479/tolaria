@@ -354,6 +354,34 @@ function handleRenameNoteFilename(args: {
   return { new_path: newPath, updated_files: updatedFiles, failed_updates: 0 }
 }
 
+function handleDuplicateNote(args: { vault_path: string; path: string }) {
+  const oldEntry = MOCK_ENTRIES.find(e => e.path === args.path)
+  const oldContent = readMockContent({ path: args.path })
+  const filename = args.path.split('/').pop() ?? 'note.md'
+  const extensionMatch = filename.match(/(\.[^.]+)$/)
+  const extension = extensionMatch?.[1] ?? ''
+  const stem = extension ? filename.slice(0, -extension.length) : filename
+  const parentDir = args.path.slice(0, args.path.length - filename.length)
+
+  let newPath = `${parentDir}${stem} copy${extension}`
+  let index = 2
+  while (Object.hasOwn(MOCK_CONTENT, newPath)) {
+    newPath = `${parentDir}${stem} copy ${index}${extension}`
+    index += 1
+  }
+
+  writeMockContent({ path: newPath, content: oldContent })
+  if (oldEntry) {
+    MOCK_ENTRIES.push({
+      ...oldEntry,
+      path: newPath,
+      filename: newPath.split('/').pop() ?? filename,
+    })
+  }
+  syncWindowContent()
+  return { new_path: newPath }
+}
+
 function handleMoveNoteToFolder(args: {
   vault_path: string
   old_path: string
@@ -678,6 +706,7 @@ export const mockHandlers: Record<string, (args: any) => any> = {
   take_pending_shell_markdown_open: () => null,
   rename_note: handleRenameNote,
   rename_note_filename: handleRenameNoteFilename,
+  duplicate_note: handleDuplicateNote,
   move_note_to_folder: handleMoveNoteToFolder,
   move_note_to_workspace: handleMoveNoteToWorkspace,
   clone_repo: (args: { url: string; localPath?: string; local_path?: string }) => {

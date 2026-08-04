@@ -78,6 +78,8 @@ export interface EditorProps {
   activeTabPath: string | null
   onSwitchTab?: (path: string) => void
   onCloseTab?: (path: string) => void
+  onCloseOtherTabs?: (path: string) => void
+  onCloseAllTabs?: () => void
   unsavedPaths?: ReadonlySet<string>
   isVaultLoading?: boolean
   entries: VaultEntry[]
@@ -455,6 +457,8 @@ function EditorLayout({
   activeTabPath,
   onSwitchTab,
   onCloseTab,
+  onCloseOtherTabs,
+  onCloseAllTabs,
   unsavedPaths,
   activeTab,
   isLoadingNewTab,
@@ -536,6 +540,8 @@ function EditorLayout({
   activeTabPath: string | null
   onSwitchTab?: (path: string) => void
   onCloseTab?: (path: string) => void
+  onCloseOtherTabs?: (path: string) => void
+  onCloseAllTabs?: () => void
   unsavedPaths?: ReadonlySet<string>
   activeTab: Tab | null
   isLoadingNewTab: boolean
@@ -625,6 +631,8 @@ function EditorLayout({
           dirtyPaths={unsavedPaths}
           onSelectTab={onSwitchTab}
           onCloseTab={onCloseTab}
+          onCloseOtherTabs={onCloseOtherTabs}
+          onCloseAllTabs={onCloseAllTabs}
           locale={locale}
         />
       )}

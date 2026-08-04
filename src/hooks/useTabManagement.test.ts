@@ -697,6 +697,23 @@ describe('useTabManagement (single-note model)', () => {
     })
   })
 
+  describe('handleCloseOtherTabs', () => {
+    it('keeps only the requested tab and activates it', async () => {
+      const { result } = renderHook(() => useTabManagement())
+      await selectNote(result, { path: '/vault/a.md' })
+      await selectNote(result, { path: '/vault/b.md' })
+      await selectNote(result, { path: '/vault/c.md' })
+
+      act(() => {
+        result.current.handleCloseOtherTabs('/vault/b.md')
+      })
+
+      expect(result.current.tabs).toHaveLength(1)
+      expect(result.current.tabs[0].entry.path).toBe('/vault/b.md')
+      expect(result.current.activeTabPath).toBe('/vault/b.md')
+    })
+  })
+
   describe('content prefetch cache', () => {
     it('prefetch validates cached content against disk before reuse', async () => {
       const mockInvoke = await prefetchResolvedContent('/vault/note/pre.md', '# Prefetched content')

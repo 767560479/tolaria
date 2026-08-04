@@ -51,37 +51,21 @@ describe('useNoteRetargetingUi', () => {
     ])
   })
 
-  it('marks the current Windows-style folder with the same normalization used by drops', () => {
-    const windowsVaultPath = 'C:\\Users\\luca\\Laputa'
-    const windowsEntry = makeEntry({
-      path: `${windowsVaultPath}\\projects\\alpha.md`,
-      filename: 'alpha.md',
-      title: 'Alpha',
+  it('opens the move dialog for an arbitrary note path', () => {
+    const other = makeEntry({
+      path: `${vaultPath}/inbox/beta.md`,
+      filename: 'beta.md',
+      title: 'Beta',
     })
-
     const { result } = renderUi({
-      activeEntry: windowsEntry,
-      entries: [windowsEntry],
-      folders: [{ name: 'projects', path: 'projects', children: [] }],
-      vaultPath: windowsVaultPath,
+      entries: [activeEntry, other],
     })
 
     act(() => {
-      result.current.openMoveNoteToFolderDialog()
+      result.current.openMoveNoteToFolderDialogFor(other.path)
     })
 
-    expect(result.current.canMoveActiveNoteToFolder).toBe(true)
-    expect(result.current.folderOptions).toEqual([
-      expect.objectContaining({
-        current: false,
-        id: '',
-        label: 'Laputa',
-      }),
-      expect.objectContaining({
-        current: true,
-        id: 'projects',
-        label: 'projects',
-      }),
-    ])
+    expect(result.current.dialogEntry?.path).toBe(other.path)
+    expect(result.current.dialogState).toEqual({ kind: 'folder', notePath: other.path })
   })
 })
