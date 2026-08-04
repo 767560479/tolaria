@@ -6,12 +6,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { FolderNode } from '../../types'
+import { SidebarCountPill } from '../SidebarParts'
 import { useFolderRowInteractions } from './useFolderRowInteractions'
 import { readDraggedNotePath } from '../../utils/noteDragDrop'
 
 interface FolderItemRowProps {
   contentInset: number
   depthIndent: number
+  fileCount?: number
   isExpanded: boolean
   isSelected: boolean
   node: FolderNode
@@ -55,6 +57,7 @@ function useFolderNoteDropHandlers({
 export function FolderItemRow({
   contentInset,
   depthIndent,
+  fileCount = 0,
   isExpanded,
   isSelected,
   node,
@@ -88,6 +91,7 @@ export function FolderItemRow({
     >
       <FolderSelectButton
         contentInset={contentInset}
+        fileCount={fileCount}
         hasChildren={hasChildren}
         isExpanded={isExpanded}
         isSelected={isSelected}
@@ -109,8 +113,32 @@ export function FolderItemRow({
   )
 }
 
+function FolderFileCountPill({
+  count,
+  isSelected,
+  path,
+}: {
+  count: number
+  isSelected: boolean
+  path: string
+}) {
+  if (count <= 0) return null
+  return (
+    <SidebarCountPill
+      count={count}
+      className={cn('shrink-0', !isSelected && 'text-muted-foreground')}
+      compact
+      style={isSelected
+        ? { background: 'var(--accent-blue)', color: 'var(--text-inverse)' }
+        : { background: 'var(--muted)' }}
+      testId={`folder-count:${path}`}
+    />
+  )
+}
+
 function FolderSelectButton({
   contentInset,
+  fileCount,
   hasChildren,
   isExpanded,
   isSelected,
@@ -122,6 +150,7 @@ function FolderSelectButton({
   onDrop,
 }: {
   contentInset: number
+  fileCount: number
   hasChildren: boolean
   isExpanded: boolean
   isSelected: boolean
@@ -137,14 +166,14 @@ function FolderSelectButton({
       type="button"
       variant="ghost"
       className={cn(
-        'h-auto flex-1 justify-start gap-2 rounded text-left text-[13px] font-medium hover:bg-transparent',
+        'h-auto min-w-0 flex-1 justify-start gap-2 rounded text-left text-[13px] font-medium hover:bg-transparent',
         isSelected ? 'text-primary hover:text-primary' : 'text-foreground hover:text-foreground',
       )}
       style={{
         paddingTop: 6,
         paddingBottom: 6,
         paddingLeft: contentInset,
-        paddingRight: 16,
+        paddingRight: 8,
       }}
       title={node.path || node.name}
       aria-expanded={hasChildren ? isExpanded : undefined}
@@ -160,7 +189,8 @@ function FolderSelectButton({
       ) : (
         <Folder size={17} className="size-[17px] shrink-0" />
       )}
-      <span className="truncate">{node.name}</span>
+      <span className="min-w-0 flex-1 truncate">{node.name}</span>
+      <FolderFileCountPill count={fileCount} isSelected={isSelected} path={node.path} />
     </Button>
   )
 }

@@ -71,6 +71,7 @@ interface SidebarProps {
   pluralizeTypeLabels?: boolean
   locale?: AppLocale
   onCollapse?: () => void
+  onFindInVault?: () => void
   onGoBack?: () => void
   onGoForward?: () => void
   canGoBack?: boolean
@@ -729,6 +730,7 @@ export const Sidebar = memo(function Sidebar(props: SidebarProps) {
       <SidebarTitleBar
         locale={locale}
         onCollapse={props.onCollapse}
+        onFindInVault={props.onFindInVault}
         onGoBack={props.onGoBack}
         onGoForward={props.onGoForward}
         canGoBack={props.canGoBack}

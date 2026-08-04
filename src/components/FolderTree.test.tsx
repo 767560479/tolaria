@@ -5,7 +5,17 @@ import { FolderTree } from './FolderTree'
 import { FOLDER_ROW_SINGLE_CLICK_DELAY_MS } from './folder-tree/useFolderRowInteractions'
 import { FOLDER_ROW_NESTING_INDENT, getFolderConnectorLeft } from './folder-tree/folderTreeLayout'
 import { CREATE_NOTE_IN_FOLDER_EVENT } from '../hooks/noteCreationRequests'
-import type { FolderNode, SidebarSelection } from '../types'
+import type { FolderNode, SidebarSelection, VaultEntry } from '../types'
+
+function mockEntry(path: string): VaultEntry {
+  return {
+    path,
+    filename: path.split('/').pop()!,
+    title: path,
+    archived: false,
+    fileKind: 'markdown',
+  } as VaultEntry
+}
 
 const mockFolders: FolderNode[] = [
   {
@@ -63,6 +73,35 @@ describe('FolderTree', () => {
     expect(screen.getByText('projects')).toBeInTheDocument()
     expect(screen.getByText('areas')).toBeInTheDocument()
     expect(screen.getByText('journal')).toBeInTheDocument()
+  })
+
+  it('shows recursive file counts on folders and hides empty-folder pills', () => {
+    vi.useFakeTimers()
+    render(
+      <FolderTree
+        folders={mockFolders}
+        entries={[
+          mockEntry('projects/readme.md'),
+          mockEntry('projects/laputa/app.md'),
+          mockEntry('projects/laputa/nested/deep.md'),
+          mockEntry('areas/focus.md'),
+        ]}
+        selection={defaultSelection}
+        onSelect={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByTestId('folder-count:projects')).toHaveTextContent('3')
+    expect(screen.getByTestId('folder-count:areas')).toHaveTextContent('1')
+    expect(screen.queryByTestId('folder-count:journal')).not.toBeInTheDocument()
+
+    clickFolderRow('projects')
+    act(() => {
+      vi.advanceTimersByTime(FOLDER_ROW_SINGLE_CLICK_DELAY_MS)
+    })
+    expect(screen.getByTestId('folder-count:projects/laputa')).toHaveTextContent('2')
+    expect(screen.queryByTestId('folder-count:projects/portfolio')).not.toBeInTheDocument()
+    vi.useRealTimers()
   })
 
   it('renders the vault root as the top-level folder when a vault path is available', () => {

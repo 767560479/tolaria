@@ -290,6 +290,23 @@ describe('SearchPanel', () => {
     await waitFor(() => {
       expect(screen.getByText('How to Design AI-first APIs')).toBeInTheDocument()
     })
+    expect(screen.getByTestId('search-result-path')).toHaveTextContent('essay/ai-apis.md')
+  })
+
+  it('localizes chrome copy for non-English locales', () => {
+    render(
+      <SearchPanel
+        open={true}
+        vaultPath="/vault"
+        entries={MOCK_ENTRIES}
+        onSelectNote={vi.fn()}
+        onClose={vi.fn()}
+        locale="zh-CN"
+      />,
+    )
+    expect(screen.getByPlaceholderText('在所有笔记中搜索...')).toBeInTheDocument()
+    expect(screen.getByText('搜索全部笔记内容')).toBeInTheDocument()
+    expect(screen.getByText('回车打开 · Esc 关闭')).toBeInTheDocument()
   })
 
   it('shows note title from VaultEntry instead of filename from search result', async () => {

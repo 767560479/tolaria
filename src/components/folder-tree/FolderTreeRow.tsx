@@ -5,7 +5,7 @@ import { FolderItemRow } from './FolderItemRow'
 import { FolderFileRow } from './FolderFileRow'
 import { FOLDER_ROW_CONTENT_INSET, getFolderConnectorLeft, getFolderDepthIndent } from './folderTreeLayout'
 import { folderNodeKey } from './folderTreeUtils'
-import { filesForFolderNode } from './folderTreeFiles'
+import { countFilesForFolderNode, filesForFolderNode } from './folderTreeFiles'
 import { notePathsMatch } from '../../utils/notePathIdentity'
 import { translate, type AppLocale } from '../../lib/i18n'
 import type { AllNotesFileVisibility } from '../../utils/allNotesFileVisibility'
@@ -293,6 +293,10 @@ export const FolderTreeRow = memo(function FolderTreeRow({
     () => filesForFolderNode(entries, { path: node.path, rootPath: nodeRootPath }, allNotesFileVisibility),
     [allNotesFileVisibility, entries, node.path, nodeRootPath],
   )
+  const fileCount = useMemo(
+    () => countFilesForFolderNode(entries, { path: node.path, rootPath: nodeRootPath }, allNotesFileVisibility),
+    [allNotesFileVisibility, entries, node.path, nodeRootPath],
+  )
   const hasExpandableContent = node.children.length > 0 || folderFiles.length > 0
   const selectFolder = useCallback(() => {
     onSelect(nodeRootPath
@@ -304,6 +308,7 @@ export const FolderTreeRow = memo(function FolderTreeRow({
       canOpenMenu={canUseDefaultFolderActions}
       contentInset={contentInset}
       depthIndent={depthIndent}
+      fileCount={fileCount}
       isExpanded={isExpanded}
       isSelected={isSelected}
       node={node}

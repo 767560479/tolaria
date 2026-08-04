@@ -10,6 +10,8 @@ import { getTypeIcon } from './NoteItem'
 import { NoteTitleIcon } from './NoteTitleIcon'
 import { WorkspaceInitialsBadge } from './WorkspaceInitialsBadge'
 import { useDateDisplayFormat } from '../hooks/useAppPreferences'
+import { relativePathForVaultItem } from '../utils/deepLinks'
+import { DEFAULT_APP_LOCALE, translate, type AppLocale } from '../lib/i18n'
 
 interface SearchPanelProps {
   open: boolean
@@ -17,6 +19,7 @@ interface SearchPanelProps {
   entries: VaultEntry[]
   onSelectNote: (entry: VaultEntry) => void
   onClose: () => void
+  locale?: AppLocale
 }
 
 type SearchKeyboardAction = 'close' | 'next' | 'previous' | 'select'
@@ -310,6 +313,7 @@ export function SearchPanel({
   entries,
   onSelectNote,
   onClose,
+  locale = DEFAULT_APP_LOCALE,
 }: SearchPanelProps) {
   const dateDisplayFormat = useDateDisplayFormat()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -354,7 +358,7 @@ export function SearchPanel({
     >
       <button
         type="button"
-        aria-label="Close search"
+        aria-label={translate(locale, 'search.close')}
         className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0"
         onClick={onClose}
       />
@@ -363,6 +367,7 @@ export function SearchPanel({
       >
         <SearchInput
           ref={inputRef}
+          locale={locale}
           query={query}
           loading={loading}
           onChange={setQuery}
@@ -377,6 +382,8 @@ export function SearchPanel({
           typeEntryMap={typeEntryMap}
           showWorkspace={showWorkspace}
           dateDisplayFormat={dateDisplayFormat}
+          locale={locale}
+          vaultPath={vaultPath}
           listRef={listRef}
           onSelect={handleSelect}
           onHover={handleResultHover}
@@ -387,13 +394,14 @@ export function SearchPanel({
 }
 
 interface SearchInputProps {
+  locale: AppLocale
   query: string
   loading: boolean
   onChange: (value: string) => void
 }
 
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
-  function SearchInput({ query, loading, onChange }, ref) {
+  function SearchInput({ locale, query, loading, onChange }, ref) {
     return (
       <div className="flex items-center gap-3 border-b border-border px-4 py-3">
         <svg aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -404,7 +412,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           ref={ref}
           className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
           type="text"
-          placeholder="Search in all notes..."
+          placeholder={translate(locale, 'search.placeholder')}
           value={query}
           onChange={e => onChange(e.target.value)}
         />
@@ -435,6 +443,8 @@ interface SearchContentProps {
   typeEntryMap: Record<string, VaultEntry>
   showWorkspace: boolean
   dateDisplayFormat: DateDisplayFormat
+  locale: AppLocale
+  vaultPath: string
   listRef: React.RefObject<HTMLDivElement | null>
   onSelect: (result: SearchResult) => void
   onHover: (index: number, event: React.MouseEvent<HTMLDivElement>) => void
@@ -448,6 +458,8 @@ interface SearchResultRowProps {
   typeEntryMap: Record<string, VaultEntry>
   showWorkspace: boolean
   dateDisplayFormat: DateDisplayFormat
+  locale: AppLocale
+  vaultPath: string
   onSelect: (result: SearchResult) => void
   onHover: (index: number, event: React.MouseEvent<HTMLDivElement>) => void
 }
@@ -456,10 +468,24 @@ interface SearchResultPresentation {
   TypeIcon: ReturnType<typeof getTypeIcon>
   icon?: string | null
   noteType: string | null
+  pathLabel: string
   subtitle: string | null
   title: string
   typeColor?: string
   workspace: VaultEntry['workspace'] | null
+}
+
+function resolveSearchResultPathLabel(
+  result: SearchResult,
+  entry: VaultEntry | undefined,
+  vaultPath: string,
+): string {
+  const itemPath = entry?.path ?? result.path
+  const rootPath = entry?.workspace?.path ?? vaultPath
+  return relativePathForVaultItem({ itemPath, vaultPath: rootPath })
+    ?? entry?.filename
+    ?? itemPath.split(/[/\\]/).pop()
+    ?? itemPath
 }
 
 function resolveSearchResultPresentation({
@@ -468,7 +494,12 @@ function resolveSearchResultPresentation({
   typeEntryMap,
   showWorkspace,
   dateDisplayFormat,
-}: Pick<SearchResultRowProps, 'result' | 'entry' | 'typeEntryMap' | 'showWorkspace' | 'dateDisplayFormat'>): SearchResultPresentation {
+  locale,
+  vaultPath,
+}: Pick<
+  SearchResultRowProps,
+  'result' | 'entry' | 'typeEntryMap' | 'showWorkspace' | 'dateDisplayFormat' | 'locale' | 'vaultPath'
+>): SearchResultPresentation {
   const isA = entry?.isA ?? result.noteType
   const noteType = isA || null
   const typeEntry = typeEntryMap[isA ?? '']
@@ -477,7 +508,8 @@ function resolveSearchResultPresentation({
     TypeIcon: getTypeIcon(isA ?? null, typeEntry?.icon),
     icon: entry?.icon,
     noteType,
-    subtitle: entry ? formatSearchSubtitle(entry, dateDisplayFormat) : null,
+    pathLabel: resolveSearchResultPathLabel(result, entry, vaultPath),
+    subtitle: entry ? formatSearchSubtitle(entry, dateDisplayFormat, locale) : null,
     title: entry?.title ?? result.title,
     typeColor: resolveSearchResultTypeColor(noteType, isA, typeEntry),
     workspace: resolveSearchResultWorkspace(showWorkspace, entry),
@@ -497,7 +529,7 @@ function resolveSearchResultWorkspace(showWorkspace: boolean, entry: VaultEntry 
 }
 
 function SearchResultRow({
-  result, entry, selected, index, typeEntryMap, showWorkspace, dateDisplayFormat, onSelect, onHover,
+  result, entry, selected, index, typeEntryMap, showWorkspace, dateDisplayFormat, locale, vaultPath, onSelect, onHover,
 }: SearchResultRowProps) {
   const presentation = resolveSearchResultPresentation({
     result,
@@ -505,6 +537,8 @@ function SearchResultRow({
     typeEntryMap,
     showWorkspace,
     dateDisplayFormat,
+    locale,
+    vaultPath,
   })
 
   return (
@@ -533,6 +567,7 @@ function SearchResultRow({
         <SearchResultTypeLabel noteType={presentation.noteType} />
         <WorkspaceInitialsBadge workspace={presentation.workspace} testId="search-result-workspace-badge" />
       </div>
+      <SearchResultPath pathLabel={presentation.pathLabel} />
       <SearchResultSubtitle subtitle={presentation.subtitle} />
     </div>
   )
@@ -551,54 +586,82 @@ function SearchResultTypeLabel({ noteType }: { noteType: string | null }) {
   return noteType ? <span className="shrink-0 text-[11px] text-muted-foreground/70">{noteType}</span> : null
 }
 
+function SearchResultPath({ pathLabel }: { pathLabel: string }) {
+  return (
+    <p
+      className="mt-0.5 pl-[22px] truncate text-[11px] text-muted-foreground"
+      data-testid="search-result-path"
+      title={pathLabel}
+    >
+      {pathLabel}
+    </p>
+  )
+}
+
 function SearchResultSubtitle({ subtitle }: { subtitle: string | null }) {
-  return subtitle ? <p className="mt-0.5 pl-[22px] text-[11px] text-muted-foreground">{subtitle}</p> : null
+  return subtitle ? <p className="mt-0.5 pl-[22px] text-[11px] text-muted-foreground/80">{subtitle}</p> : null
 }
 
-function SearchIdleMessage() {
+function SearchIdleMessage({ locale }: { locale: AppLocale }) {
   return (
     <div className="px-4 py-8 text-center">
-      <p className="text-[13px] text-muted-foreground">Search across all note contents</p>
-      <p className="mt-1 text-[11px] text-muted-foreground/60">Enter to open · Esc to close</p>
+      <p className="text-[13px] text-muted-foreground">{translate(locale, 'search.idleHint')}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground/60">{translate(locale, 'search.idleShortcutHint')}</p>
     </div>
   )
 }
 
-function SearchLoadingMessage() {
-  return <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">Searching...</div>
-}
-
-function SearchNoResultsMessage() {
+function SearchLoadingMessage({ locale }: { locale: AppLocale }) {
   return (
-    <div className="px-4 py-8 text-center">
-      <p className="text-[13px] text-muted-foreground">No results found</p>
+    <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+      {translate(locale, 'search.searching')}
     </div>
   )
 }
 
-function SearchResultsHeader({ count, elapsedMs }: { count: number; elapsedMs: number | null }) {
+function SearchNoResultsMessage({ locale }: { locale: AppLocale }) {
+  return (
+    <div className="px-4 py-8 text-center">
+      <p className="text-[13px] text-muted-foreground">{translate(locale, 'search.noResults')}</p>
+    </div>
+  )
+}
+
+function SearchResultsHeader({
+  count,
+  elapsedMs,
+  locale,
+}: {
+  count: number
+  elapsedMs: number | null
+  locale: AppLocale
+}) {
+  const countLabel = translate(locale, 'search.resultCount', {
+    count,
+    plural: count === 1 ? '' : 's',
+  })
   return (
     <div className="border-b border-border/50 px-4 py-1.5">
       <span className="text-[11px] text-muted-foreground">
-        {count} result{count !== 1 ? 's' : ''}{elapsedMs !== null ? ` · ${elapsedMs}ms` : ''}
+        {elapsedMs !== null ? `${countLabel} · ${elapsedMs}ms` : countLabel}
       </span>
     </div>
   )
 }
 
 function SearchContent({
-  query, results, selectedIndex, loading, elapsedMs, entryLookup, typeEntryMap, showWorkspace, dateDisplayFormat, listRef, onSelect, onHover,
+  query, results, selectedIndex, loading, elapsedMs, entryLookup, typeEntryMap, showWorkspace, dateDisplayFormat, locale, vaultPath, listRef, onSelect, onHover,
 }: SearchContentProps) {
   const hasQuery = query.trim().length > 0
   const hasResults = results.length > 0
   return (
     <div className="flex-1 overflow-y-auto">
-      {!hasQuery && <SearchIdleMessage />}
-      {hasQuery && !hasResults && loading && <SearchLoadingMessage />}
-      {hasQuery && !hasResults && !loading && <SearchNoResultsMessage />}
+      {!hasQuery && <SearchIdleMessage locale={locale} />}
+      {hasQuery && !hasResults && loading && <SearchLoadingMessage locale={locale} />}
+      {hasQuery && !hasResults && !loading && <SearchNoResultsMessage locale={locale} />}
       {hasResults && (
         <>
-          <SearchResultsHeader count={results.length} elapsedMs={elapsedMs} />
+          <SearchResultsHeader count={results.length} elapsedMs={elapsedMs} locale={locale} />
           <div ref={listRef} role="listbox" aria-label="Search results">
             {results.map((result, i) => (
               <SearchResultRow
@@ -610,6 +673,8 @@ function SearchContent({
                 typeEntryMap={typeEntryMap}
                 showWorkspace={showWorkspace}
                 dateDisplayFormat={dateDisplayFormat}
+                locale={locale}
+                vaultPath={vaultPath}
                 onSelect={onSelect}
                 onHover={onHover}
               />

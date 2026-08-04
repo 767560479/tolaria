@@ -11,11 +11,13 @@ function renderTitleBar(overrides: Partial<ComponentProps<typeof SidebarTitleBar
 describe('SidebarTitleBar', () => {
   it('renders sidebar and history controls with shortcut tooltips', () => {
     const onCollapse = vi.fn()
+    const onFindInVault = vi.fn()
     const onGoBack = vi.fn()
     const onGoForward = vi.fn()
 
     renderTitleBar({
       onCollapse,
+      onFindInVault,
       onGoBack,
       onGoForward,
       canGoBack: true,
@@ -23,19 +25,23 @@ describe('SidebarTitleBar', () => {
     })
 
     const collapse = screen.getByRole('button', { name: 'Collapse sidebar' })
+    const findInVault = screen.getByRole('button', { name: 'Find in Vault' })
     const back = screen.getByRole('button', { name: 'Go Back' })
     const forward = screen.getByRole('button', { name: 'Go Forward' })
 
     expect(collapse).toHaveAttribute('title', expect.stringMatching(/^Collapse sidebar \((⌘|Ctrl\+)2\)$/))
+    expect(findInVault).toHaveAttribute('title', expect.stringMatching(/^Find in Vault \((⌘⇧F|Ctrl\+Shift\+F)\)$/))
     expect(back).toHaveAttribute('title', expect.stringMatching(/^Go Back \((⌘←|Ctrl\+Left)\)$/))
     expect(forward).toHaveAttribute('title', expect.stringMatching(/^Go Forward \((⌘→|Ctrl\+Right)\)$/))
     expect(forward).toBeDisabled()
 
     fireEvent.click(collapse)
+    fireEvent.click(findInVault)
     fireEvent.click(back)
     fireEvent.click(forward)
 
     expect(onCollapse).toHaveBeenCalledTimes(1)
+    expect(onFindInVault).toHaveBeenCalledTimes(1)
     expect(onGoBack).toHaveBeenCalledTimes(1)
     expect(onGoForward).not.toHaveBeenCalled()
   })
@@ -44,6 +50,7 @@ describe('SidebarTitleBar', () => {
     renderTitleBar()
 
     expect(screen.queryByRole('button', { name: 'Collapse sidebar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Find in Vault' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Go Back' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Go Forward' })).not.toBeInTheDocument()
   })
