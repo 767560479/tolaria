@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::fs;
 use std::io::{Error, ErrorKind, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, UNIX_EPOCH};
 
