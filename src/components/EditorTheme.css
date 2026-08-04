@@ -686,6 +686,7 @@ body.tldraw-whiteboard-fullscreen-open {
   background-color: var(--editor-code-block-background) !important;
   border: 1px solid var(--editor-code-block-border);
   color: var(--editor-code-block-text) !important;
+  margin: 8px 0;
   position: relative;
 }
 
