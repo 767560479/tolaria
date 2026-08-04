@@ -1000,5 +1000,16 @@
   "sidebar.group.tags": "标签",
   "editor.tabs.label": "打开的笔记",
   "editor.tabs.close": "关闭 {name}",
-  "noteList.title.tag": "#{tag}"
+  "noteList.title.tag": "#{tag}",
+  "search.placeholder": "在所有笔记中搜索...",
+  "search.idleHint": "搜索全部笔记内容",
+  "search.idleShortcutHint": "回车打开 · Esc 关闭",
+  "search.searching": "搜索中...",
+  "search.noResults": "未找到结果",
+  "search.resultCount": "{count} 个结果{plural}",
+  "search.close": "关闭搜索",
+  "search.subtitle.created": "创建于 {date}",
+  "search.subtitle.words": "{count} 字",
+  "search.subtitle.empty": "空",
+  "search.subtitle.links": "{count} 个链接{plural}"
 }

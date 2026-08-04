@@ -19,6 +19,12 @@ import { viewMatchesSelection } from './viewIdentity'
 import { wikilinkTarget, resolveEntry } from './wikilink'
 import { buildTypeVisibilityLookup, isSectionEntryVisibleForType } from './typeVisibility'
 import { entryHasTag } from './noteTags'
+import {
+  DEFAULT_APP_LOCALE,
+  getLocaleDateLocale,
+  translate,
+  type AppLocale,
+} from '../lib/i18n'
 
 export type NoteListFilter = 'open' | 'archived'
 
@@ -81,21 +87,29 @@ function wasCreatedBeforeLastModification(entry: VaultEntry): boolean {
 export function formatSearchSubtitle(
   entry: VaultEntry,
   dateDisplayFormat: DateDisplayFormat = DEFAULT_DATE_DISPLAY_FORMAT,
+  locale: AppLocale = DEFAULT_APP_LOCALE,
 ): string {
   const parts: string[] = []
   const modified = entry.modifiedAt ?? entry.createdAt
   if (modified) parts.push(formatTimestampForDateDisplay(modified, dateDisplayFormat))
   const created = entry.createdAt
   if (created && wasCreatedBeforeLastModification(entry)) {
-    parts.push(`Created ${formatTimestampForDateDisplay(created, dateDisplayFormat)}`)
+    parts.push(translate(locale, 'search.subtitle.created', {
+      date: formatTimestampForDateDisplay(created, dateDisplayFormat),
+    }))
   }
   if (entry.wordCount > 0) {
-    parts.push(`${entry.wordCount.toLocaleString('en-US')} words`)
+    parts.push(translate(locale, 'search.subtitle.words', {
+      count: entry.wordCount.toLocaleString(getLocaleDateLocale(locale)),
+    }))
   } else {
-    parts.push('Empty')
+    parts.push(translate(locale, 'search.subtitle.empty'))
   }
   if (entry.outgoingLinks.length > 0) {
-    parts.push(`${entry.outgoingLinks.length} ${entry.outgoingLinks.length === 1 ? 'link' : 'links'}`)
+    parts.push(translate(locale, 'search.subtitle.links', {
+      count: entry.outgoingLinks.length,
+      plural: entry.outgoingLinks.length === 1 ? '' : 's',
+    }))
   }
   return parts.join(' \u00b7 ')
 }

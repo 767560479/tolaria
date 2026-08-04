@@ -1000,5 +1000,16 @@
   "sidebar.group.tags": "標籤",
   "editor.tabs.label": "開啟的筆記",
   "editor.tabs.close": "關閉 {name}",
-  "noteList.title.tag": "#{tag}"
+  "noteList.title.tag": "#{tag}",
+  "search.placeholder": "在所有筆記中搜尋...",
+  "search.idleHint": "搜尋全部筆記內容",
+  "search.idleShortcutHint": "Enter 開啟 · Esc 關閉",
+  "search.searching": "搜尋中...",
+  "search.noResults": "找不到結果",
+  "search.resultCount": "{count} 個結果{plural}",
+  "search.close": "關閉搜尋",
+  "search.subtitle.created": "建立於 {date}",
+  "search.subtitle.words": "{count} 字",
+  "search.subtitle.empty": "空",
+  "search.subtitle.links": "{count} 個連結{plural}"
 }

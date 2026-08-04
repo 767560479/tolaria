@@ -1000,5 +1000,16 @@
   "sidebar.group.tags": "TAGS",
   "editor.tabs.label": "Open notes",
   "editor.tabs.close": "Close {name}",
-  "noteList.title.tag": "#{tag}"
+  "noteList.title.tag": "#{tag}",
+  "search.placeholder": "Search in all notes...",
+  "search.idleHint": "Search across all note contents",
+  "search.idleShortcutHint": "Enter to open · Esc to close",
+  "search.searching": "Searching...",
+  "search.noResults": "No results found",
+  "search.resultCount": "{count} result{plural}",
+  "search.close": "Close search",
+  "search.subtitle.created": "Created {date}",
+  "search.subtitle.words": "{count} words",
+  "search.subtitle.empty": "Empty",
+  "search.subtitle.links": "{count} link{plural}"
 }

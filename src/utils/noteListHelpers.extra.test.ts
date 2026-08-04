@@ -75,6 +75,7 @@ describe('noteListHelpers extra coverage', () => {
     expect(formatSubtitle(modifiedEntry)).toBe('April 21, 2026 · 1,200 words · 2 links')
     expect(formatSubtitle(emptyEntry)).toBe('Empty')
     expect(formatSearchSubtitle(modifiedEntry)).toBe('April 21, 2026 · Created April 19, 2026 · 1,200 words · 2 links')
+    expect(formatSearchSubtitle(modifiedEntry, 'american', 'zh-CN')).toContain('创建于')
   })
 
   it('keeps note subtitle counts stable under non-English default number formatting', () => {

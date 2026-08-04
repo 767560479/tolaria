@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  ArrowLeft, ArrowRight, Palette, PencilSimple, Plus, SidebarSimple, SlidersHorizontal, Trash,
+  ArrowLeft, ArrowRight, MagnifyingGlass, Palette, PencilSimple, Plus, SidebarSimple, SlidersHorizontal, Trash,
 } from '@phosphor-icons/react'
 import { APP_COMMAND_IDS, getAppCommandShortcutDisplay } from '../../hooks/appCommandCatalog'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ const SIDEBAR_TITLE_BAR_LEFT_PADDING =
   `var(--tolaria-macos-traffic-light-padding, ${MACOS_TRAFFIC_LIGHT_SAFE_PADDING}px)`
 
 const SIDEBAR_COLLAPSE_SHORTCUT = getAppCommandShortcutDisplay(APP_COMMAND_IDS.viewEditorList)
+const FIND_IN_VAULT_SHORTCUT = getAppCommandShortcutDisplay(APP_COMMAND_IDS.editFindInVault)
 const HISTORY_BACK_SHORTCUT = getAppCommandShortcutDisplay(APP_COMMAND_IDS.viewGoBack)
 const HISTORY_FORWARD_SHORTCUT = getAppCommandShortcutDisplay(APP_COMMAND_IDS.viewGoForward)
 const SIDEBAR_TYPE_CONTEXT_MENU_SURFACE_CLASSNAME =
@@ -384,6 +385,7 @@ function SidebarTitleBarAction({
 export function SidebarTitleBar({
   locale = 'en',
   onCollapse,
+  onFindInVault,
   onGoBack,
   onGoForward,
   canGoBack = false,
@@ -391,6 +393,7 @@ export function SidebarTitleBar({
 }: {
   locale?: AppLocale
   onCollapse?: () => void
+  onFindInVault?: () => void
   onGoBack?: () => void
   onGoForward?: () => void
   canGoBack?: boolean
@@ -398,6 +401,7 @@ export function SidebarTitleBar({
 }) {
   const { dragRegionRef } = useDragRegion<HTMLDivElement>()
   const collapseLabel = translate(locale, 'sidebar.action.collapse')
+  const findInVaultLabel = translate(locale, 'menu.edit.findInVault')
   const backLabel = translate(locale, 'command.navigation.goBack')
   const forwardLabel = translate(locale, 'command.navigation.goForward')
 
@@ -411,6 +415,15 @@ export function SidebarTitleBar({
         {onCollapse && (
           <SidebarTitleBarAction label={collapseLabel} shortcut={SIDEBAR_COLLAPSE_SHORTCUT} onClick={onCollapse}>
             <SidebarSimple size={16} weight="regular" />
+          </SidebarTitleBarAction>
+        )}
+        {onFindInVault && (
+          <SidebarTitleBarAction
+            label={findInVaultLabel}
+            shortcut={FIND_IN_VAULT_SHORTCUT}
+            onClick={onFindInVault}
+          >
+            <MagnifyingGlass size={16} weight="regular" />
           </SidebarTitleBarAction>
         )}
         {onGoBack && (
