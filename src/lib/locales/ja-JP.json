@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "AIパネルを閉じる",
   "editor.toolbar.openTableOfContents": "目次を開く",
   "editor.toolbar.closeTableOfContents": "目次を閉じる",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "開いているノート",
+  "editor.tabs.close": "{name} を閉じる",
   "editor.tabs.closeMenu": "閉じる",
   "editor.tabs.closeOthers": "他を閉じる",
   "editor.tabs.closeAll": "すべて閉じる",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "すべてのタブを閉じる",
   "editor.tabs.closeUnsavedTitle": "未保存の編集を破棄しますか？",
   "editor.tabs.closeUnsavedMessage": "{count} 件の開いているノートに未保存の編集があります。閉じると変更は破棄されます。",
-  "editor.tabs.closeUnsavedConfirm": "破棄して閉じる"
+  "editor.tabs.closeUnsavedConfirm": "破棄して閉じる",
+  "sidebar.action.revealFolderMenuMac": "Finder で表示",
+  "sidebar.action.revealFolderMenuWindows": "エクスプローラーで表示",
+  "sidebar.action.revealFolderMenuLinux": "ファイルマネージャーで表示",
+  "editor.toolbar.revealFileMac": "Finderで表示",
+  "editor.toolbar.revealFileWindows": "エクスプローラーで表示",
+  "editor.toolbar.revealFileLinux": "ファイルマネージャーで表示"
 }

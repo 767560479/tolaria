@@ -489,7 +489,7 @@ describe('useCommandRegistry', () => {
     expect(findCommand(result.current, 'reveal-active-file')).toMatchObject({
       enabled: true,
       group: 'Note',
-      label: 'Reveal in Finder',
+      label: expect.stringMatching(/^Reveal in (Finder|File Explorer|File Manager)$/),
     })
     expect(findCommand(result.current, 'copy-active-file-path')).toMatchObject({
       enabled: true,

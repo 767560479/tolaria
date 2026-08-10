@@ -2,6 +2,12 @@
 
 Tolaria offers a rich editor for daily writing and a raw Markdown mode for exact file control. Both modes write back to the same Markdown file.
 
+## Open Tabs
+
+Multiple notes can stay open as tabs above the editor. Switch between them without losing your place, close one tab at a time, or use the tab menu to close others or all tabs.
+
+See [Browse The File Tree And Tabs](/guides/browse-file-tree-and-tabs) for the folder-tree workflow that opens notes into tabs.
+
 ## Rich Editing
 
 The rich editor supports blocks, slash commands, wikilinks, tables, code blocks, editable callouts, images, Mermaid diagrams, LaTeX-style math, sandboxed HTML blocks, and markdown-backed whiteboards.

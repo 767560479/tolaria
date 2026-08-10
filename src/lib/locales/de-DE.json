@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "AI-Panel schließen",
   "editor.toolbar.openTableOfContents": "Inhaltsverzeichnis öffnen",
   "editor.toolbar.closeTableOfContents": "Inhaltsverzeichnis schließen",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Geöffnete Notizen",
+  "editor.tabs.close": "{name} schließen",
   "editor.tabs.closeMenu": "Schließen",
   "editor.tabs.closeOthers": "Andere schließen",
   "editor.tabs.closeAll": "Alle schließen",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Alle Tabs schließen",
   "editor.tabs.closeUnsavedTitle": "Ungespeicherte Änderungen verwerfen?",
   "editor.tabs.closeUnsavedMessage": "{count} geöffnete Notiz(en) haben ungespeicherte Änderungen. Schließen verwirft diese Änderungen.",
-  "editor.tabs.closeUnsavedConfirm": "Verwerfen und schließen"
+  "editor.tabs.closeUnsavedConfirm": "Verwerfen und schließen",
+  "sidebar.action.revealFolderMenuMac": "Im Finder anzeigen",
+  "sidebar.action.revealFolderMenuWindows": "Im Explorer anzeigen",
+  "sidebar.action.revealFolderMenuLinux": "Im Dateimanager anzeigen",
+  "editor.toolbar.revealFileMac": "Im Finder anzeigen",
+  "editor.toolbar.revealFileWindows": "Im Explorer anzeigen",
+  "editor.toolbar.revealFileLinux": "Im Dateimanager anzeigen"
 }

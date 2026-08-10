@@ -1,7 +1,10 @@
 import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { APP_COMMAND_IDS, getAppCommandShortcutDisplay } from '../hooks/appCommandCatalog'
+import { translateRevealInFileManager } from '../lib/revealInFileManager'
 import { makeEntry, mockEntries, renderNoteList } from '../test-utils/noteListTestUtils'
+
+const revealFileLabel = translateRevealInFileManager('en', 'file')
 
 function setViewportSize(width: number, height: number) {
   Object.defineProperty(window, 'innerWidth', { value: width, configurable: true })
@@ -94,7 +97,7 @@ describe('NoteList context menu', () => {
     clickBuildLaputaAction("Open note's neighborhood")
     expect(onEnterNeighborhood).toHaveBeenCalledWith(mockEntries[0])
 
-    clickBuildLaputaAction('Reveal in Finder')
+    clickBuildLaputaAction(revealFileLabel)
     expect(onRevealFile).toHaveBeenCalledWith(mockEntries[0].path)
 
     clickBuildLaputaAction('Copy file path')
@@ -160,7 +163,7 @@ describe('NoteList context menu', () => {
     expect(screen.getByTestId('note-list-context-menu')).toBeInTheDocument()
     expect(screen.queryByText('Mark as Organized')).not.toBeInTheDocument()
     expect(screen.queryByText('Rename filename')).not.toBeInTheDocument()
-    expect(screen.getByText('Reveal in Finder')).toBeInTheDocument()
+    expect(screen.getByText(revealFileLabel)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Copy file path'))
     expect(onCopyFilePath).toHaveBeenCalledWith(pdfEntry.path)

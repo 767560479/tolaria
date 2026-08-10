@@ -206,10 +206,11 @@ export function useCommandRegistry(config: CommandRegistryConfig): import('./com
     onGoForward,
     canGoBack,
     canGoForward,
+    locale,
   }), [
     onQuickOpen, onSelect, selection, onRenameFolder, onDeleteFolder,
     onRevealSelectedFolder, onCopySelectedFolderPath, showInbox,
-    onGoBack, onGoForward, canGoBack, canGoForward,
+    onGoBack, onGoForward, canGoBack, canGoForward, locale,
   ])
 
   const noteCommands = useMemo(() => buildNoteCommands({

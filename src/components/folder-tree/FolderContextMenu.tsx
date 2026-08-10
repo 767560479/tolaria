@@ -2,6 +2,7 @@ import type { RefObject, ReactNode } from 'react'
 import { ClipboardText, FolderOpen, FolderPlus, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { translate, type AppLocale } from '../../lib/i18n'
+import { translateRevealInFileManager } from '../../lib/revealInFileManager'
 import { getContextMenuPositionStyle } from '../contextMenuPosition'
 
 const FOLDER_CONTEXT_MENU_MIN_WIDTH = 'min(11.25rem, calc(100vw - 16px))'
@@ -92,7 +93,7 @@ export function FolderContextMenu(props: FolderContextMenuProps) {
           data-testid="reveal-folder-menu-item"
         >
           <FolderOpen size={14} className="shrink-0" />
-          <FolderMenuLabel>{translate(locale, 'sidebar.action.revealFolderMenu')}</FolderMenuLabel>
+          <FolderMenuLabel>{translateRevealInFileManager(locale, 'folder')}</FolderMenuLabel>
         </Button>
       )}
       {onCopyPath && (

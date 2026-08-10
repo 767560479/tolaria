@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "關閉全部分頁",
   "editor.tabs.closeUnsavedTitle": "捨棄未儲存的編輯？",
   "editor.tabs.closeUnsavedMessage": "有 {count} 個已開啟筆記含未儲存編輯。關閉將捨棄這些變更。",
-  "editor.tabs.closeUnsavedConfirm": "捨棄並關閉"
+  "editor.tabs.closeUnsavedConfirm": "捨棄並關閉",
+  "sidebar.action.revealFolderMenuMac": "在檔案管理器中顯示",
+  "sidebar.action.revealFolderMenuWindows": "在檔案管理器中顯示",
+  "sidebar.action.revealFolderMenuLinux": "在檔案管理器中顯示",
+  "editor.toolbar.revealFileMac": "在檔案管理器中顯示",
+  "editor.toolbar.revealFileWindows": "在檔案管理器中顯示",
+  "editor.toolbar.revealFileLinux": "在檔案管理器中顯示"
 }

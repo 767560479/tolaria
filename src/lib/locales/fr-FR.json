@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "Fermer le panneau d'IA",
   "editor.toolbar.openTableOfContents": "Ouvrir la table des matières",
   "editor.toolbar.closeTableOfContents": "Fermer la table des matières",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Notes ouvertes",
+  "editor.tabs.close": "Fermer {name}",
   "editor.tabs.closeMenu": "Fermer",
   "editor.tabs.closeOthers": "Fermer les autres",
   "editor.tabs.closeAll": "Tout fermer",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Fermer tous les onglets",
   "editor.tabs.closeUnsavedTitle": "Abandonner les modifications non enregistrées ?",
   "editor.tabs.closeUnsavedMessage": "{count} note(s) ouverte(s) ont des modifications non enregistrées. Les fermer abandonnera ces changements.",
-  "editor.tabs.closeUnsavedConfirm": "Abandonner et fermer"
+  "editor.tabs.closeUnsavedConfirm": "Abandonner et fermer",
+  "sidebar.action.revealFolderMenuMac": "Afficher dans le Finder",
+  "sidebar.action.revealFolderMenuWindows": "Afficher dans l’Explorateur",
+  "sidebar.action.revealFolderMenuLinux": "Afficher dans le gestionnaire de fichiers",
+  "editor.toolbar.revealFileMac": "Afficher dans le Finder",
+  "editor.toolbar.revealFileWindows": "Afficher dans l’Explorateur",
+  "editor.toolbar.revealFileLinux": "Afficher dans le gestionnaire de fichiers"
 }

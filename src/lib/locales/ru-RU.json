@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "Закрыть панель ИИ",
   "editor.toolbar.openTableOfContents": "Открыть оглавление",
   "editor.toolbar.closeTableOfContents": "Закрыть оглавление",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Открытые заметки",
+  "editor.tabs.close": "Закрыть {name}",
   "editor.tabs.closeMenu": "Закрыть",
   "editor.tabs.closeOthers": "Закрыть другие",
   "editor.tabs.closeAll": "Закрыть все",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Закрыть все вкладки",
   "editor.tabs.closeUnsavedTitle": "Отменить несохранённые изменения?",
   "editor.tabs.closeUnsavedMessage": "У {count} открытой(ых) заметки(ок) есть несохранённые изменения. Закрытие отменит эти изменения.",
-  "editor.tabs.closeUnsavedConfirm": "Отменить и закрыть"
+  "editor.tabs.closeUnsavedConfirm": "Отменить и закрыть",
+  "sidebar.action.revealFolderMenuMac": "Показать в Finder",
+  "sidebar.action.revealFolderMenuWindows": "Показать в проводнике",
+  "sidebar.action.revealFolderMenuLinux": "Показать в файловом менеджере",
+  "editor.toolbar.revealFileMac": "Показать в Finder",
+  "editor.toolbar.revealFileWindows": "Показать в проводнике",
+  "editor.toolbar.revealFileLinux": "Показать в файловом менеджере"
 }

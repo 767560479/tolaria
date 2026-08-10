@@ -18,6 +18,7 @@ import {
 import type { NoteWidthMode, VaultEntry } from '../types'
 import { cn } from '@/lib/utils'
 import { translate, type AppLocale } from '../lib/i18n'
+import { translateRevealInFileManager } from '../lib/revealInFileManager'
 import { APP_COMMAND_IDS, formatShortcutDisplay, getAppCommandShortcutDisplay } from '../hooks/appCommandCatalog'
 import { extractFrontmatterTitleFromContent, extractH1TitleFromContent } from '../utils/noteTitle'
 import { isHtmlFileEntry } from '../utils/filePreview'
@@ -446,7 +447,7 @@ function FilePathActions({
     <>
       {onRevealFile && (
         <IconActionButton
-          copy={{ label: translate(locale, 'editor.toolbar.revealFile') }}
+          copy={{ label: translateRevealInFileManager(locale, 'file') }}
           onClick={() => onRevealFile(entry.path)}
           className="hover:text-foreground"
           testId="breadcrumb-reveal-file"
@@ -1087,7 +1088,7 @@ function BreadcrumbOverflowMenu({
           <>
             <DropdownMenuItem disabled={!runRevealAction} onSelect={runRevealAction}>
               <FolderOpen size={16} />
-              {translate(locale, 'editor.toolbar.revealFile')}
+              {translateRevealInFileManager(locale, 'file')}
             </DropdownMenuItem>
             <DropdownMenuItem disabled={!runCopyPathAction} onSelect={runCopyPathAction}>
               <ClipboardText size={16} />

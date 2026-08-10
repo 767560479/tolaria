@@ -78,7 +78,16 @@ describe('i18n', () => {
   })
 
   it('uses platform-neutral Chinese labels for revealing files and folders', () => {
-    const revealKeys = ['sidebar.action.revealFolderMenu', 'editor.toolbar.revealFile'] as const
+    const revealKeys = [
+      'sidebar.action.revealFolderMenu',
+      'sidebar.action.revealFolderMenuMac',
+      'sidebar.action.revealFolderMenuWindows',
+      'sidebar.action.revealFolderMenuLinux',
+      'editor.toolbar.revealFile',
+      'editor.toolbar.revealFileMac',
+      'editor.toolbar.revealFileWindows',
+      'editor.toolbar.revealFileLinux',
+    ] as const
 
     for (const key of revealKeys) {
       expect(translate('zh-CN', key)).toBe('在文件管理器中显示')

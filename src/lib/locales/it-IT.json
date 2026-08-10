@@ -743,11 +743,11 @@
   "editor.toolbar.closeAi": "Chiudi il pannello IA",
   "editor.toolbar.openTableOfContents": "Apri l'indice",
   "editor.toolbar.closeTableOfContents": "Chiudi l'indice",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Note aperte",
+  "editor.tabs.close": "Chiudi {name}",
   "editor.tabs.closeMenu": "Chiudi",
-  "editor.tabs.closeOthers": "Chiudi gli altri",
-  "editor.tabs.closeAll": "Chiudi tutto",
+  "editor.tabs.closeOthers": "Chiudi le altre",
+  "editor.tabs.closeAll": "Chiudi tutte",
   "editor.toolbar.restoreArchived": "Ripristina questa nota archiviata",
   "editor.toolbar.archive": "Archivia questa nota",
   "editor.toolbar.delete": "Elimina questa nota",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Chiudi tutte le schede",
   "editor.tabs.closeUnsavedTitle": "Scartare le modifiche non salvate?",
   "editor.tabs.closeUnsavedMessage": "{count} nota/e aperta/e ha/hanno modifiche non salvate. Chiudere scarterà tali modifiche.",
-  "editor.tabs.closeUnsavedConfirm": "Scarta e chiudi"
+  "editor.tabs.closeUnsavedConfirm": "Scarta e chiudi",
+  "sidebar.action.revealFolderMenuMac": "Mostra in Finder",
+  "sidebar.action.revealFolderMenuWindows": "Mostra in Esplora file",
+  "sidebar.action.revealFolderMenuLinux": "Mostra nel gestore file",
+  "editor.toolbar.revealFileMac": "Mostra nel Finder",
+  "editor.toolbar.revealFileWindows": "Mostra in Esplora file",
+  "editor.toolbar.revealFileLinux": "Mostra nel gestore file"
 }

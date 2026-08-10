@@ -5,6 +5,7 @@ import {
 } from '../appCommandCatalog'
 import { buildEditorFindCommands } from './editorFindCommands'
 import { translate, type AppLocale } from '../../lib/i18n'
+import { translateRevealInFileManager } from '../../lib/revealInFileManager'
 import type { ImmediateCreateOptions } from '../useNoteCreation'
 import type { CommandAction } from './types'
 import {
@@ -348,8 +349,8 @@ function buildActivePathCommand(config: NoteCommandsConfig, command: ActivePathC
 function buildRevealActiveFileCommand(config: NoteCommandsConfig): CommandAction {
   return buildActivePathCommand(config, {
     id: 'reveal-active-file',
-    label: 'Reveal in Finder',
-    keywords: ['file', 'folder', 'finder', 'reveal', 'show', 'filesystem'],
+    label: translateRevealInFileManager(config.locale ?? 'en', 'file'),
+    keywords: ['file', 'folder', 'finder', 'explorer', 'reveal', 'show', 'filesystem'],
     enabled: !!config.onRevealActiveFile,
     run: (path) => config.onRevealActiveFile?.(path),
   })

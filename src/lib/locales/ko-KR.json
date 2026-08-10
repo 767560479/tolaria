@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "AI 패널 닫기",
   "editor.toolbar.openTableOfContents": "목차 열기",
   "editor.toolbar.closeTableOfContents": "목차 닫기",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "열린 노트",
+  "editor.tabs.close": "{name} 닫기",
   "editor.tabs.closeMenu": "닫기",
   "editor.tabs.closeOthers": "다른 탭 닫기",
   "editor.tabs.closeAll": "모두 닫기",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "모든 탭 닫기",
   "editor.tabs.closeUnsavedTitle": "저장되지 않은 편집을 버릴까요?",
   "editor.tabs.closeUnsavedMessage": "열린 노트 {count}개에 저장되지 않은 편집이 있습니다. 닫으면 변경 내용이 버려집니다.",
-  "editor.tabs.closeUnsavedConfirm": "버리고 닫기"
+  "editor.tabs.closeUnsavedConfirm": "버리고 닫기",
+  "sidebar.action.revealFolderMenuMac": "Finder에서 표시",
+  "sidebar.action.revealFolderMenuWindows": "파일 탐색기에서 표시",
+  "sidebar.action.revealFolderMenuLinux": "파일 관리자에서 표시",
+  "editor.toolbar.revealFileMac": "Finder에서 표시",
+  "editor.toolbar.revealFileWindows": "파일 탐색기에서 표시",
+  "editor.toolbar.revealFileLinux": "파일 관리자에서 표시"
 }

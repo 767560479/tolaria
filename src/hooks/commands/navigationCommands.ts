@@ -1,6 +1,8 @@
 import { APP_COMMAND_IDS, getAppCommandShortcutDisplay } from '../appCommandCatalog'
 import type { CommandAction } from './types'
 import type { SidebarSelection } from '../../types'
+import type { AppLocale } from '../../lib/i18n'
+import { translateRevealInFileManager } from '../../lib/revealInFileManager'
 
 interface NavigationCommandsConfig {
   onQuickOpen: () => void
@@ -15,6 +17,7 @@ interface NavigationCommandsConfig {
   onGoForward?: () => void
   canGoBack?: boolean
   canGoForward?: boolean
+  locale?: AppLocale
 }
 
 interface FolderCommandsConfig {
@@ -24,6 +27,7 @@ interface FolderCommandsConfig {
   onDeleteFolder?: () => void
   onRenameFolder?: () => void
   onRevealSelectedFolder?: () => void
+  locale?: AppLocale
 }
 
 function canRunFolderCommand(folderSelected: boolean, action?: () => void): boolean {
@@ -41,13 +45,14 @@ function buildFolderCommands({
   onDeleteFolder,
   onRenameFolder,
   onRevealSelectedFolder,
+  locale = 'en',
 }: FolderCommandsConfig): CommandAction[] {
   return [
     {
       id: 'reveal-selected-folder',
-      label: 'Reveal Folder in Finder',
+      label: translateRevealInFileManager(locale, 'folder'),
       group: 'Navigation',
-      keywords: ['folder', 'directory', 'finder', 'reveal', 'show', 'filesystem'],
+      keywords: ['folder', 'directory', 'finder', 'explorer', 'reveal', 'show', 'filesystem'],
       enabled: canRunFolderCommand(folderSelected, onRevealSelectedFolder),
       execute: () => runOptionalCommand(onRevealSelectedFolder),
     },
@@ -122,6 +127,7 @@ export function buildNavigationCommands(config: NavigationCommandsConfig): Comma
     onRevealSelectedFolder,
     onCopySelectedFolderPath,
     showInbox = true,
+    locale = 'en',
   } = config
   const folderSelected = selection?.kind === 'folder'
   const canMutateFolder = folderSelected && selection.path.length > 0
@@ -134,6 +140,7 @@ export function buildNavigationCommands(config: NavigationCommandsConfig): Comma
       onDeleteFolder,
       onRevealSelectedFolder,
       onCopySelectedFolderPath,
+      locale,
     }),
   ]
   return insertInboxCommand(commands, showInbox, onSelect)

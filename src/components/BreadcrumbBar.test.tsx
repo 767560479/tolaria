@@ -3,7 +3,10 @@ import { render, screen, fireEvent, act, within, waitFor } from '@testing-librar
 import { describe, it, expect, vi } from 'vitest'
 import { BreadcrumbBar } from './BreadcrumbBar'
 import { formatShortcutDisplay } from '../hooks/appCommandCatalog'
+import { translateRevealInFileManager } from '../lib/revealInFileManager'
 import type { VaultEntry } from '../types'
+
+const revealFileLabel = translateRevealInFileManager('en', 'file')
 
 const dragRegionMouseDown = vi.fn()
 
@@ -320,7 +323,7 @@ describe('BreadcrumbBar — file actions', () => {
     const onRevealFile = vi.fn()
     render(<BreadcrumbBar entry={baseEntry} {...defaultProps} onRevealFile={onRevealFile} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal in Finder' }))
+    fireEvent.click(screen.getByRole('button', { name: revealFileLabel }))
 
     expect(onRevealFile).toHaveBeenCalledWith('/vault/note/test.md')
   })
@@ -396,7 +399,7 @@ describe('BreadcrumbBar — standalone HTML actions', () => {
     })
 
     expect(screen.getByRole('button', { name: 'Open the raw editor' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reveal in Finder' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: revealFileLabel })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy file path' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add to favorites' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Set note as organized' })).not.toBeInTheDocument()
@@ -786,7 +789,7 @@ describe('BreadcrumbBar — action buttons always right-aligned', () => {
 
     const menu = await openOverflowMenu()
     expect(within(menu).queryByRole('menuitem', { name: 'Switch to wide note width' })).not.toBeInTheDocument()
-    expect(within(menu).queryByRole('menuitem', { name: 'Reveal in Finder' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('menuitem', { name: revealFileLabel })).not.toBeInTheDocument()
     expect(within(menu).queryByRole('menuitem', { name: 'Copy file path' })).not.toBeInTheDocument()
     expect(within(menu).queryByRole('menuitem', { name: "Open note's neighborhood" })).not.toBeInTheDocument()
     expect(within(menu).getByRole('menuitem', { name: 'Copy note deeplink' })).toBeInTheDocument()
@@ -814,7 +817,7 @@ describe('BreadcrumbBar — action buttons always right-aligned', () => {
 
       const menu = await openOverflowMenu()
       expect(within(menu).getByRole('menuitem', { name: 'Switch to wide note width' })).toBeInTheDocument()
-      expect(within(menu).getByRole('menuitem', { name: 'Reveal in Finder' })).toBeInTheDocument()
+      expect(within(menu).getByRole('menuitem', { name: revealFileLabel })).toBeInTheDocument()
       expect(within(menu).getByRole('menuitem', { name: 'Copy file path' })).toBeInTheDocument()
       expect(within(menu).getByRole('menuitem', { name: "Open note's neighborhood" })).toBeInTheDocument()
       expect(within(menu).getByRole('menuitem', { name: 'Copy note deeplink' })).toBeInTheDocument()

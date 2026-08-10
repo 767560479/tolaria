@@ -10,6 +10,9 @@ Open it with:
 ## Common Commands
 
 - New Note.
+- Duplicate Note.
+- Close Other Tabs.
+- Close All Tabs.
 - Search.
 - Open Settings.
 - Reload Vault.

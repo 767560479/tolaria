@@ -29,6 +29,8 @@
 | `Cmd+E` / `Ctrl+E` | Mark the current Inbox note organized. |
 | `Cmd+Backspace` / `Ctrl+Backspace` | Delete the current note. |
 
+Use the command palette for Duplicate Note, Close Other Tabs, and Close All Tabs. Tab close actions are also available from the editor tab context menu.
+
 ## Rich Editor Shortcuts
 
 These shortcuts apply while the rich editor owns focus.

@@ -16,6 +16,7 @@ import {
 } from '@phosphor-icons/react'
 import { APP_COMMAND_IDS, getAppCommandShortcutDisplay } from '../../hooks/appCommandCatalog'
 import { translate, type AppLocale } from '../../lib/i18n'
+import { translateRevealInFileManager } from '../../lib/revealInFileManager'
 import type { VaultEntry } from '../../types'
 import { isMarkdownEntry } from '../../utils/typeDefinitions'
 
@@ -160,7 +161,7 @@ function revealFileItem(
   if (!onRevealFile) return []
   return [{
     icon: FolderOpen,
-    label: translate(locale, 'editor.toolbar.revealFile'),
+    label: translateRevealInFileManager(locale, 'file'),
     onSelect: () => selectAction('reveal_file', () => onRevealFile(entry.path)),
   }]
 }

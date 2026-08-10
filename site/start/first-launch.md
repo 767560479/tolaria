@@ -27,6 +27,7 @@ Tolaria stores app-level settings on the local machine. Your notes stay in the v
 
 - `Cmd+K` / `Ctrl+K`: open the command palette.
 - `New Note`: create a note in the current vault.
+- Browse the left file tree to open folders and Markdown notes as tabs.
 - `Open Getting Started Vault`: clone the public sample vault.
 - `Reload Vault`: rescan files after external edits.
 

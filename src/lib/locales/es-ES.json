@@ -743,11 +743,11 @@
   "editor.toolbar.closeAi": "Cerrar el panel de IA",
   "editor.toolbar.openTableOfContents": "Abrir el índice",
   "editor.toolbar.closeTableOfContents": "Cerrar el índice",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Notas abiertas",
+  "editor.tabs.close": "Cerrar {name}",
   "editor.tabs.closeMenu": "Cerrar",
-  "editor.tabs.closeOthers": "Cerrar otros",
-  "editor.tabs.closeAll": "Cerrar todo",
+  "editor.tabs.closeOthers": "Cerrar las demás",
+  "editor.tabs.closeAll": "Cerrar todas",
   "editor.toolbar.restoreArchived": "Restaurar esta nota archivada",
   "editor.toolbar.archive": "Archivar esta nota",
   "editor.toolbar.delete": "Eliminar esta nota",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Cerrar todas las pestañas",
   "editor.tabs.closeUnsavedTitle": "¿Descartar ediciones sin guardar?",
   "editor.tabs.closeUnsavedMessage": "{count} nota(s) abierta(s) tienen ediciones sin guardar. Cerrar descartará esos cambios.",
-  "editor.tabs.closeUnsavedConfirm": "Descartar y cerrar"
+  "editor.tabs.closeUnsavedConfirm": "Descartar y cerrar",
+  "sidebar.action.revealFolderMenuMac": "Mostrar en el Finder",
+  "sidebar.action.revealFolderMenuWindows": "Mostrar en el Explorador",
+  "sidebar.action.revealFolderMenuLinux": "Mostrar en el administrador de archivos",
+  "editor.toolbar.revealFileMac": "Mostrar en el Finder",
+  "editor.toolbar.revealFileWindows": "Mostrar en el Explorador",
+  "editor.toolbar.revealFileLinux": "Mostrar en el administrador de archivos"
 }

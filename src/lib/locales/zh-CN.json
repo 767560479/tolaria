@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "关闭全部标签",
   "editor.tabs.closeUnsavedTitle": "丢弃未保存的编辑？",
   "editor.tabs.closeUnsavedMessage": "有 {count} 个已打开笔记含未保存编辑。关闭将丢弃这些更改。",
-  "editor.tabs.closeUnsavedConfirm": "丢弃并关闭"
+  "editor.tabs.closeUnsavedConfirm": "丢弃并关闭",
+  "sidebar.action.revealFolderMenuMac": "在文件管理器中显示",
+  "sidebar.action.revealFolderMenuWindows": "在文件管理器中显示",
+  "sidebar.action.revealFolderMenuLinux": "在文件管理器中显示",
+  "editor.toolbar.revealFileMac": "在文件管理器中显示",
+  "editor.toolbar.revealFileWindows": "在文件管理器中显示",
+  "editor.toolbar.revealFileLinux": "在文件管理器中显示"
 }

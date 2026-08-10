@@ -69,6 +69,7 @@ export default defineConfig({
         text: "Guides",
         items: [
           { text: "Capture A Note", link: "/guides/capture-a-note" },
+          { text: "Browse The File Tree And Tabs", link: "/guides/browse-file-tree-and-tabs" },
           { text: "Organize The Inbox", link: "/guides/organize-inbox" },
           { text: "Use Wikilinks", link: "/guides/use-wikilinks" },
           { text: "Use The Rich Editor", link: "/guides/use-rich-editor" },

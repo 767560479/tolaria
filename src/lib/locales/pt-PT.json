@@ -743,8 +743,8 @@
   "editor.toolbar.closeAi": "Fechar o painel de IA",
   "editor.toolbar.openTableOfContents": "Abrir índice",
   "editor.toolbar.closeTableOfContents": "Fechar índice",
-  "editor.tabs.label": "Open notes",
-  "editor.tabs.close": "Close {name}",
+  "editor.tabs.label": "Notas abertas",
+  "editor.tabs.close": "Fechar {name}",
   "editor.tabs.closeMenu": "Fechar",
   "editor.tabs.closeOthers": "Fechar outros",
   "editor.tabs.closeAll": "Fechar todos",
@@ -1021,5 +1021,11 @@
   "command.note.closeAllTabs": "Fechar todos os separadores",
   "editor.tabs.closeUnsavedTitle": "Descartar edições não guardadas?",
   "editor.tabs.closeUnsavedMessage": "{count} nota(s) aberta(s) têm edições não guardadas. Fechar descartará essas alterações.",
-  "editor.tabs.closeUnsavedConfirm": "Descartar e fechar"
+  "editor.tabs.closeUnsavedConfirm": "Descartar e fechar",
+  "sidebar.action.revealFolderMenuMac": "Mostrar no Finder",
+  "sidebar.action.revealFolderMenuWindows": "Mostrar no Explorador",
+  "sidebar.action.revealFolderMenuLinux": "Mostrar no gestor de ficheiros",
+  "editor.toolbar.revealFileMac": "Mostrar no Finder",
+  "editor.toolbar.revealFileWindows": "Mostrar no Explorador",
+  "editor.toolbar.revealFileLinux": "Mostrar no gestor de ficheiros"
 }
