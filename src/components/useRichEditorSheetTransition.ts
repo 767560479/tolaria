@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { VaultEntry } from '../types'
 import { noteDisplaysAsSheet } from '../utils/noteFormat'
+import { notePathsMatch } from '../utils/notePathIdentity'
 import {
   applyPendingRawExitContent,
   type PendingRawExitContent,
@@ -61,5 +62,5 @@ export function useRichEditorContentReadiness<Tab extends SheetTransitionTab>({
   const activePath = activeTab?.entry.path ?? null
   if (!activePath || activeTabIsSheet) return true
   if (editorContentPath === null) return true
-  return editorContentPath === activePath
+  return notePathsMatch(editorContentPath, activePath)
 }

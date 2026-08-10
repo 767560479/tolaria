@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { requestEditorFocus, useEditorFocus } from './useEditorFocus'
+import { requestEditorFocus, resetEditorFocusTestState, useEditorFocus } from './useEditorFocus'
 import type { FocusableEditor } from './editorFocusUtils'
 import { resumeEditorFocus, suspendEditorFocus } from './editorFocusOwnership'
 import { trackEvent } from '../lib/telemetry'
@@ -40,6 +40,11 @@ function expectSelectionRange(
 describe('useEditorFocus', () => {
   afterEach(() => {
     resumeEditorFocus()
+    resetEditorFocusTestState()
+    if (vi.isFakeTimers()) {
+      vi.runOnlyPendingTimers()
+      vi.useRealTimers()
+    }
     vi.restoreAllMocks()
     document.body.innerHTML = ''
   })
@@ -231,6 +236,55 @@ describe('useEditorFocus', () => {
     vi.advanceTimersByTime(1)
     expect(rAF).toHaveBeenCalled()
     expect(editor.focus).toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
+  it('does not treat pre-swap focus on the old editor as success for a path-targeted request', () => {
+    vi.useFakeTimers()
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0 })
+    const { editor, editable } = setup(true)
+    editable.focus()
+    expect(document.activeElement).toBe(editable)
+
+    window.dispatchEvent(new CustomEvent('laputa:focus-editor', { detail: { path: '/vault/new-note.md' } }))
+    vi.advanceTimersByTime(250)
+
+    // Fallback may attempt focus, but must keep waiting for the real tab swap.
+    editor.focus.mockClear()
+    window.dispatchEvent(new CustomEvent('laputa:editor-tab-swapped', { detail: { path: '/vault/new-note.md' } }))
+
+    expect(editor.focus).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
+  })
+
+  it('matches tab-swap paths using note path identity', () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0 })
+    const { editor } = setup(true)
+    const windowsPath = String.raw`C:\vault\new-note.md`
+
+    window.dispatchEvent(new CustomEvent('laputa:focus-editor', { detail: { path: windowsPath } }))
+    window.dispatchEvent(new CustomEvent('laputa:editor-tab-swapped', {
+      detail: { path: 'C:/vault/new-note.md' },
+    }))
+
+    expect(editor.focus).toHaveBeenCalledTimes(1)
+  })
+
+  it('reclaims focus from a sidebar control after a path-targeted create remount', () => {
+    vi.useFakeTimers()
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => { cb(0); return 0 })
+    const { editor } = setup(true)
+    const sidebarButton = document.createElement('button')
+    document.body.appendChild(sidebarButton)
+
+    window.dispatchEvent(new CustomEvent('laputa:focus-editor', { detail: { path: '/vault/new-note.md' } }))
+    window.dispatchEvent(new CustomEvent('laputa:editor-tab-swapped', { detail: { path: '/vault/new-note.md' } }))
+    expect(editor.focus).toHaveBeenCalledTimes(1)
+
+    sidebarButton.focus()
+    vi.advanceTimersByTime(200)
+
+    expect(editor.focus).toHaveBeenCalledTimes(2)
     vi.useRealTimers()
   })
 
