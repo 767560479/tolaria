@@ -52,4 +52,17 @@ describe('shouldReplaceSyncedTabEntry', () => {
   it('replaces the tab entry when visible metadata changes', () => {
     expect(shouldReplaceSyncedTabEntry(baseEntry, { ...baseEntry, title: 'Renamed Alpha' })).toBe(true)
   })
+
+  it('replaces the tab entry when only the path string form changes', () => {
+    const scanned = {
+      ...baseEntry,
+      path: String.raw`D:\vault\notes\alpha.md`,
+    }
+    const optimistic = {
+      ...baseEntry,
+      path: String.raw`D:\vault\notes/alpha.md`,
+    }
+
+    expect(shouldReplaceSyncedTabEntry(optimistic, scanned)).toBe(true)
+  })
 })

@@ -1,6 +1,7 @@
 import type { NoteStatus, VaultEntry } from '../../types'
 import { extractH1TitleFromContent } from '../../utils/noteTitle'
 import { noteDisplaysAsSheet } from '../../utils/noteFormat'
+import { normalizeNotePathForIdentity } from '../../utils/notePathIdentity'
 import { countWords } from '../../utils/wikilinks'
 import { isHtmlFileEntry } from '../../utils/filePreview'
 
@@ -33,7 +34,10 @@ function getEntryLookup(entries: VaultEntry[]): Map<string, VaultEntry> {
 
   const lookup = new Map<string, VaultEntry>()
   for (const entry of entries) {
-    lookup.set(entry.path, entry)
+    // Identity keys so optimistic create paths (mixed separators) still match
+    // vault-scanned paths after watcher reload — otherwise isDeletedPreview flips
+    // editable off while the tab is still open.
+    lookup.set(normalizeNotePathForIdentity(entry.path), entry)
   }
 
   entryLookupCache.set(entries, lookup)
@@ -56,7 +60,7 @@ export interface EditorContentState {
 
 function findFreshEntry(activeTab: EditorContentTab | null, entries: VaultEntry[]): VaultEntry | undefined {
   if (!activeTab) return undefined
-  return getEntryLookup(entries).get(activeTab.entry.path)
+  return getEntryLookup(entries).get(normalizeNotePathForIdentity(activeTab.entry.path))
 }
 
 function contentHasTopLevelH1(activeTab: EditorContentTab | null): boolean {

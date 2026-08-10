@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { NoteInfoPanel } from './NoteInfoPanel'
 import type { VaultEntry } from '../../types'
+import { formatTimestampForDateDisplay } from '../../utils/dateDisplay'
 
 function makeEntry(overrides: Partial<VaultEntry> = {}): VaultEntry {
   return {
@@ -32,6 +33,14 @@ describe('NoteInfoPanel', () => {
     const readOnlyRows = screen.getAllByTestId('readonly-property')
     const labels = readOnlyRows.map(row => row.querySelector('span')?.textContent)
     expect(labels).toContain('Created')
+  })
+
+  it('formats Modified and Created with the default iso date display', () => {
+    const timestamp = 1700000000
+    const expected = formatTimestampForDateDisplay(timestamp, 'iso')
+    render(<NoteInfoPanel entry={makeEntry({ modifiedAt: timestamp, createdAt: timestamp })} content="" />)
+    expect(screen.getAllByText(expected)).toHaveLength(2)
+    expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('renders file size', () => {

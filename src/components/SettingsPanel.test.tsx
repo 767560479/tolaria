@@ -274,7 +274,7 @@ describe('SettingsPanel', () => {
       release_channel: null,
       automatic_update_checks_enabled: false,
       theme_mode: 'light',
-      date_display_format: 'friendly',
+      date_display_format: 'iso',
       note_width_mode: 'normal',
       sidebar_type_pluralization_enabled: true,
       hide_gitignored_files: true,
@@ -491,12 +491,12 @@ describe('SettingsPanel', () => {
     expect(screen.getByText('系统（简体中文）')).toBeInTheDocument()
   })
 
-  it('defaults date display to friendly, note width to normal, and sidebar type pluralization to enabled', () => {
+  it('defaults date display to iso, note width to normal, and sidebar type pluralization to enabled', () => {
     render(
       <SettingsPanel open={true} settings={emptySettings} onSave={onSave} onClose={onClose} />
     )
 
-    expect(screen.getByTestId('settings-date-display-format')).toHaveAttribute('data-value', 'friendly')
+    expect(screen.getByTestId('settings-date-display-format')).toHaveAttribute('data-value', 'iso')
     expect(screen.getByTestId('settings-default-note-width')).toHaveAttribute('data-value', 'normal')
     expect(
       within(screen.getByTestId('settings-sidebar-type-pluralization')).getByRole('switch')
@@ -531,18 +531,18 @@ describe('SettingsPanel', () => {
     )
 
     fireEvent.pointerDown(screen.getByTestId('settings-date-display-format'), { button: 0, pointerType: 'mouse' })
-    fireEvent.click(screen.getByRole('option', { name: 'ISO (2026-05-11)' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Friendly (May 11, 2026)' }))
     fireEvent.pointerDown(screen.getByTestId('settings-default-note-width'), { button: 0, pointerType: 'mouse' })
     fireEvent.click(screen.getByRole('option', { name: 'Wide' }))
     fireEvent.click(within(screen.getByTestId('settings-sidebar-type-pluralization')).getByRole('switch'))
     fireEvent.click(screen.getByTestId('settings-save'))
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
-      date_display_format: 'iso',
+      date_display_format: 'friendly',
       note_width_mode: 'wide',
       sidebar_type_pluralization_enabled: false,
     }))
-    expect(trackEventMock).toHaveBeenCalledWith('date_display_format_changed', { format: 'iso' })
+    expect(trackEventMock).toHaveBeenCalledWith('date_display_format_changed', { format: 'friendly' })
   })
 
   it('keeps the language selector keyboard accessible', () => {

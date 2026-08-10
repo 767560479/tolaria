@@ -116,7 +116,7 @@ import { SETTINGS_SECTION_IDS } from './components/settingsSectionIds'
 import {
   vaultPathForEntry,
 } from './utils/workspaces'
-import { notePathsMatch } from './utils/notePathIdentity'
+import { findByNotePath, notePathsMatch } from './utils/notePathIdentity'
 import { activeGitRepositories } from './utils/gitRepositories'
 import { entrySupportsPreviewSourceToggle } from './utils/filePreview'
 import { isMarkdownEntry } from './utils/typeDefinitions'
@@ -712,20 +712,30 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
   })
   // Keep note entry in sync with vault entries so banners (trash/archive)
   // and read-only state react immediately without reopening the note.
+  const activeTabPathForEntrySync = notes.activeTabPath
+  const handleSwitchTabForEntrySync = notes.handleSwitchTab
+  const setTabsForEntrySync = notes.setTabs
   useEffect(() => {
-    notes.setTabs(prev => {
+    let nextActivePath: string | undefined
+    setTabsForEntrySync(prev => {
       let changed = false
       const next = prev.map(tab => {
-        const fresh = visibleEntries.find(e => e.path === tab.entry.path)
-        if (fresh && shouldReplaceSyncedTabEntry(tab.entry, fresh)) {
-          changed = true
-          return { ...tab, entry: fresh }
+        const fresh = findByNotePath(visibleEntries, tab.entry.path)
+        if (!fresh || !shouldReplaceSyncedTabEntry(tab.entry, fresh)) return tab
+        changed = true
+        if (
+          activeTabPathForEntrySync
+          && notePathsMatch(tab.entry.path, activeTabPathForEntrySync)
+          && fresh.path !== activeTabPathForEntrySync
+        ) {
+          nextActivePath = fresh.path
         }
-        return tab
+        return { ...tab, entry: fresh }
       })
       return changed ? next : prev
     })
-  }, [visibleEntries, notes.setTabs]) // eslint-disable-line react-hooks/exhaustive-deps -- notes.setTabs is stable (useState setter)
+    if (nextActivePath) handleSwitchTabForEntrySync(nextActivePath)
+  }, [visibleEntries, activeTabPathForEntrySync, handleSwitchTabForEntrySync, setTabsForEntrySync])
 
   const { handleGoBack, handleGoForward, canGoBack, canGoForward, entriesByPath } = useAppNavigation({
     entries: visibleEntries,

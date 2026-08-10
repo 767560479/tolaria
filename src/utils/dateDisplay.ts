@@ -2,7 +2,7 @@ import { parseDashDateParts, parseSlashDateParts, type DateParts } from './dateS
 
 export type DateDisplayFormat = 'us' | 'european' | 'friendly' | 'iso'
 
-export const DEFAULT_DATE_DISPLAY_FORMAT: DateDisplayFormat = 'friendly'
+export const DEFAULT_DATE_DISPLAY_FORMAT: DateDisplayFormat = 'iso'
 export const DATE_DISPLAY_FORMATS: readonly DateDisplayFormat[] = ['us', 'european', 'friendly', 'iso']
 
 const FRIENDLY_MONTHS = [

@@ -118,6 +118,34 @@ describe('deriveEditorContentState', () => {
     expect(state.showEditor).toBe(true)
   })
 
+  it('keeps a newly created note editable when vault reload only changes path separators', () => {
+    const optimisticPath = String.raw`D:\vault\project/untitled-note-1700000000.md`
+    const scannedPath = String.raw`D:\vault\project\untitled-note-1700000000.md`
+    const optimisticEntry = {
+      ...baseEntry,
+      path: optimisticPath,
+      filename: 'untitled-note-1700000000.md',
+      title: 'Untitled Note 1700000000',
+    }
+    const scannedEntry = {
+      ...optimisticEntry,
+      path: scannedPath,
+    }
+
+    const state = deriveEditorContentState({
+      activeTab: {
+        entry: optimisticEntry,
+        content: '---\ntype: Note\n---\n#\n',
+      },
+      entries: [scannedEntry],
+      rawMode: false,
+      activeStatus: 'unsaved',
+    })
+
+    expect(state.isDeletedPreview).toBe(false)
+    expect(state.freshEntry?.path).toBe(scannedPath)
+  })
+
   it.each([
     ['marks markdown notes with sheet display as sheet editor content', 'Note', '---\ntype: Note\n_display: sheet\n---\nMetric,January', true],
     ['does not treat Sheet type metadata as sheet editor content', 'Sheet', '---\ntype: Sheet\n---\nMetric,January', false],
