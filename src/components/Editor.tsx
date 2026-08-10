@@ -778,7 +778,7 @@ export const Editor = memo(function Editor(props: EditorProps) {
     onToast?.(imageImportErrorMessage(error, locale))
   }, [locale, onToast])
   const handleRenderRecovered = useCallback(() => {
-    onToast?.(translate(locale, 'editor.render.recovered'))
+    onToast?.(translate(locale ?? 'en', 'editor.render.recovered'))
   }, [locale, onToast])
   const runtime = useEditorSetup({
     tabs: props.tabs,

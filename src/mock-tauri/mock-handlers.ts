@@ -358,7 +358,7 @@ function rewriteMockDuplicateTitles(content: string, suffix: string): string {
   if (!suffix) return content
 
   let next = content
-  next = next.replace(/^---\n([\s\S]*?)\n---/, (block, body: string) => {
+  next = next.replace(/^---\n([\s\S]*?)\n---/, (_block, body: string) => {
     const updatedBody = body.replace(
       /^([ \t]*title:[ \t]*)(["']?)(.+?)\2([ \t]*)$/m,
       (_line, prefix: string, quote: string, title: string, trailing: string) => {
