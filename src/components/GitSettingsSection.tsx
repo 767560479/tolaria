@@ -11,6 +11,10 @@ import {
   SettingsRow,
   SettingsSwitchRow,
 } from './SettingsControls'
+import {
+  AUTOGIT_THRESHOLD_MAX_SECONDS,
+  AUTOGIT_THRESHOLD_MIN_SECONDS,
+} from '../utils/autoGitThresholds'
 
 type Translate = ReturnType<typeof createTranslator>
 
@@ -162,6 +166,8 @@ export function GitSettingsSection(props: GitSettingsSectionProps) {
             onValueChange={setAutoGitIdleThresholdSeconds}
             testId="settings-autogit-idle-threshold"
             disabled={!gitControlsAvailable}
+            min={AUTOGIT_THRESHOLD_MIN_SECONDS}
+            max={AUTOGIT_THRESHOLD_MAX_SECONDS}
           />
         </SettingsRow>
 
@@ -176,6 +182,8 @@ export function GitSettingsSection(props: GitSettingsSectionProps) {
             onValueChange={setAutoGitInactiveThresholdSeconds}
             testId="settings-autogit-inactive-threshold"
             disabled={!gitControlsAvailable}
+            min={AUTOGIT_THRESHOLD_MIN_SECONDS}
+            max={Math.min(AUTOGIT_THRESHOLD_MAX_SECONDS, autoGitIdleThresholdSeconds)}
           />
         </SettingsRow>
       </SettingsGroup>

@@ -42,6 +42,86 @@ fn clean_title_value(raw_value: &str) -> String {
         .to_string()
 }
 
+fn append_copy_suffix(title: &str, suffix: &str) -> String {
+    if title.ends_with(suffix) {
+        return title.to_string();
+    }
+    format!("{title}{suffix}")
+}
+
+fn body_start_index(content: &str) -> usize {
+    if !content.starts_with("---") {
+        return 0;
+    }
+    match content[3..].find("\n---") {
+        Some(end) => {
+            let after = 3 + end + 4;
+            if content[after..].starts_with('\n') {
+                after + 1
+            } else if content[after..].starts_with("\r\n") {
+                after + 2
+            } else {
+                after
+            }
+        }
+        None => 0,
+    }
+}
+
+fn rewrite_first_atx_h1(content: &str, suffix: &str) -> String {
+    let body_start = body_start_index(content);
+    let body = &content[body_start..];
+    let mut offset = 0usize;
+    for line in body.split_inclusive('\n') {
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+        let trimmed_start = trimmed.trim_start();
+        if trimmed_start.is_empty() {
+            offset += line.len();
+            continue;
+        }
+        if let Some(title) = trimmed_start
+            .strip_prefix("# ")
+            .filter(|text| !text.starts_with('#'))
+        {
+            let leading_len = trimmed.len() - trimmed_start.len();
+            let leading = &trimmed[..leading_len];
+            let newline = &line[trimmed.len()..];
+            let next_title = append_copy_suffix(title.trim_end(), suffix);
+            let rewritten = format!("{leading}# {next_title}{newline}");
+            return format!(
+                "{}{}{}{}",
+                &content[..body_start],
+                &body[..offset],
+                rewritten,
+                &body[offset + line.len()..]
+            );
+        }
+        break;
+    }
+    content.to_string()
+}
+
+/// Append the duplicate filename suffix (` copy` / ` copy N`) to frontmatter `title`
+/// and the first body ATX H1 so the copy is distinguishable from the source note.
+pub(crate) fn rewrite_titles_for_duplicate(content: &str, title_suffix: &str) -> String {
+    if title_suffix.is_empty() {
+        return content.to_string();
+    }
+
+    let mut out = content.to_string();
+    if let Some(title) = extract_raw_title(&out) {
+        let next = append_copy_suffix(&title, title_suffix);
+        if next != title {
+            if let Ok(updated) =
+                update_frontmatter_content(&out, "title", Some(FrontmatterValue::String(next)))
+            {
+                out = updated;
+            }
+        }
+    }
+    rewrite_first_atx_h1(&out, title_suffix)
+}
+
 /// Sync the `title` frontmatter field with the filename.
 ///
 /// Rules (filename is source of truth):
@@ -175,5 +255,23 @@ mod tests {
         assert!(content.contains("type: Project"));
         assert!(content.contains("status: Active"));
         assert!(content.contains("title: My Note"));
+    }
+
+    #[test]
+    fn rewrite_titles_for_duplicate_updates_h1_and_frontmatter() {
+        let rewritten = rewrite_titles_for_duplicate(
+            "---\ntitle: Alpha\ntype: Note\n---\n# Alpha\n\nBody\n",
+            " copy",
+        );
+        assert!(rewritten.contains("title: Alpha copy"));
+        assert!(rewritten.contains("# Alpha copy\n"));
+        assert!(rewritten.contains("type: Note"));
+        assert!(rewritten.contains("Body"));
+    }
+
+    #[test]
+    fn rewrite_titles_for_duplicate_handles_numbered_suffix() {
+        let rewritten = rewrite_titles_for_duplicate("# Alpha\n", " copy 2");
+        assert_eq!(rewritten, "# Alpha copy 2\n");
     }
 }

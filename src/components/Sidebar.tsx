@@ -59,6 +59,8 @@ interface SidebarProps {
   onCreateFolder?: (name: string, parent?: FolderCreationParent) => Promise<boolean> | boolean
   onRenameFolder?: (folderPath: string, nextName: string) => Promise<boolean> | boolean
   onDeleteFolder?: (folderPath: string) => void
+  onMoveFolder?: (folderPath: string) => void
+  onDuplicateFolder?: (folderPath: string) => void
   folderFileActions?: FolderFileActions
   noteFileMenu?: FolderTreeNoteMenuProps
   renamingFolderPath?: string | null
@@ -97,6 +99,8 @@ interface SidebarNavigationProps extends Pick<
   | 'onCreateFolder'
   | 'onRenameFolder'
   | 'onDeleteFolder'
+  | 'onMoveFolder'
+  | 'onDuplicateFolder'
   | 'folderFileActions'
   | 'noteFileMenu'
   | 'renamingFolderPath'
@@ -188,6 +192,8 @@ type SidebarFoldersNavigationProps = Pick<
   | 'onCreateFolder'
   | 'onRenameFolder'
   | 'onDeleteFolder'
+  | 'onMoveFolder'
+  | 'onDuplicateFolder'
   | 'folderFileActions'
   | 'noteFileMenu'
   | 'renamingFolderPath'
@@ -359,6 +365,8 @@ function SidebarFoldersNavigation({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onMoveFolder,
+  onDuplicateFolder,
   folderFileActions,
   noteFileMenu,
   renamingFolderPath,
@@ -396,6 +404,8 @@ function SidebarFoldersNavigation({
       onCreateFolder={onCreateFolder}
       onRenameFolder={onRenameFolder}
       onDeleteFolder={onDeleteFolder}
+      onMoveFolder={onMoveFolder}
+      onDuplicateFolder={onDuplicateFolder}
       folderFileActions={folderFileActions}
       noteFileMenu={noteFileMenu}
       renamingFolderPath={renamingFolderPath}
@@ -523,6 +533,8 @@ function SidebarNavigation(props: SidebarNavigationProps) {
         onCreateFolder={props.onCreateFolder}
         onRenameFolder={props.onRenameFolder}
         onDeleteFolder={props.onDeleteFolder}
+        onMoveFolder={props.onMoveFolder}
+        onDuplicateFolder={props.onDuplicateFolder}
         folderFileActions={props.folderFileActions}
         noteFileMenu={props.noteFileMenu}
         renamingFolderPath={props.renamingFolderPath}
@@ -667,6 +679,8 @@ function SidebarRuntimeNavigation({
       onCreateFolder={props.onCreateFolder}
       onRenameFolder={props.onRenameFolder}
       onDeleteFolder={props.onDeleteFolder}
+      onMoveFolder={props.onMoveFolder}
+      onDuplicateFolder={props.onDuplicateFolder}
       folderFileActions={props.folderFileActions}
       noteFileMenu={props.noteFileMenu}
       renamingFolderPath={props.renamingFolderPath}

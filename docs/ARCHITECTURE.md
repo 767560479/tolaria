@@ -667,10 +667,12 @@ The vault backend (`src-tauri/src/vault/`) is split into focused submodules:
 | `delete_note` | Permanently delete note from disk (with confirm dialog) |
 | `rename_note` | Crash-safe note rename + `title` frontmatter update + cross-vault wikilinks + failed backlink counts |
 | `move_note_to_folder` | Crash-safe folder move that preserves the filename, reloads the moved note, and rewrites path-based wikilinks |
-| `duplicate_note` | Byte-copy a vault file to a unique sibling path (`name copy.ext` / `name copy N.ext`) without rewriting wikilinks |
+| `duplicate_note` | Copy a vault file to a unique sibling path (`name copy.ext` / `name copy N.ext`), rewrite frontmatter `title` + first body H1 with the same suffix, without rewriting wikilinks |
 | `create_vault_folder` | Create a folder relative to the active vault root |
 | `list_vault_folders` | Build the folder tree on the blocking Tokio pool, then apply Gitignored-content visibility → `Vec<FolderNode>` |
 | `rename_vault_folder` | Rename a folder relative to the active vault root and return old/new relative paths |
+| `move_vault_folder` | Move a folder under a destination parent (`""` = vault root); rejects self/descendant targets; returns old/new relative paths |
+| `duplicate_vault_folder` | Recursively copy a folder to a unique sibling (`name copy` / `name copy N`) and return old/new relative paths |
 | `delete_vault_folder` | Permanently delete a folder subtree relative to the active vault root |
 | `sync_note_title` | Legacy helper: rewrite `title` frontmatter from filename → `bool` (modified); not used by the normal note-open flow |
 | `batch_archive_notes` | Archive multiple notes |

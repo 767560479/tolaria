@@ -372,6 +372,7 @@ type EditorCanvasProps = Pick<
   | 'vaultPath'
   | 'locale'
   | 'onImageImportError'
+  | 'onRenderRecovered'
 >
 
 function EditorCanvas(props: EditorCanvasProps) {
@@ -404,6 +405,7 @@ function StandardEditorCanvas({
   vaultPath,
   locale,
   onImageImportError,
+  onRenderRecovered,
 }: EditorCanvasProps) {
   if (!isSheet && !richEditorContentReady) return null
 
@@ -444,6 +446,7 @@ function StandardEditorCanvas({
           onNavigateWikilink={onNavigateWikilink}
           onChange={onEditorChange}
           onImageImportError={onImageImportError}
+          onRenderRecovered={onRenderRecovered}
           sourceEntry={activeTab?.entry ?? null}
           vaultPath={vaultPath}
           editable={!isDeletedPreview}
@@ -524,6 +527,7 @@ export function EditorContentLayout(model: EditorContentModel) {
     findRequest,
     locale,
     onImageImportError,
+    onRenderRecovered,
     isVaultLoading,
   } = model
   const rootClassName = cn(
@@ -587,6 +591,7 @@ export function EditorContentLayout(model: EditorContentModel) {
             onEditorChange={onEditorChange}
             onRawContentChange={onRawContentChange}
             onImageImportError={onImageImportError}
+            onRenderRecovered={onRenderRecovered}
             sheetFlushRef={sheetFlushRef}
             isDeletedPreview={isDeletedPreview}
             isSheet={isSheet}

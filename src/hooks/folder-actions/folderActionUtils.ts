@@ -76,6 +76,38 @@ export async function invokeDeleteFolder(params: { vaultPath: string; folderPath
   return mockInvoke<string>('delete_vault_folder', params)
 }
 
+export async function invokeMoveFolder(params: {
+  vaultPath: string
+  folderPath: string
+  destParentRelative: string
+}): Promise<FolderRenameResult> {
+  if (isTauri()) {
+    return invoke<FolderRenameResult>('move_vault_folder', {
+      vaultPath: params.vaultPath,
+      folderPath: params.folderPath,
+      destParentRelative: params.destParentRelative,
+    })
+  }
+  return mockInvoke<FolderRenameResult>('move_vault_folder', {
+    vault_path: params.vaultPath,
+    folder_path: params.folderPath,
+    dest_parent_relative: params.destParentRelative,
+  })
+}
+
+export async function invokeDuplicateFolder(params: {
+  vaultPath: string
+  folderPath: string
+}): Promise<FolderRenameResult> {
+  if (isTauri()) {
+    return invoke<FolderRenameResult>('duplicate_vault_folder', params)
+  }
+  return mockInvoke<FolderRenameResult>('duplicate_vault_folder', {
+    vault_path: params.vaultPath,
+    folder_path: params.folderPath,
+  })
+}
+
 export function updateSelectionAfterFolderRename(params: {
   refreshedEntries: VaultEntry[]
   renameResult: FolderRenameResult

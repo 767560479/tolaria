@@ -1194,13 +1194,14 @@ function refreshCodeBlockSyntaxHighlighting(editor: ReturnType<typeof useCreateB
 }
 
 /** Single BlockNote editor view — content is swapped via replaceBlocks */
-export function SingleEditorView({ currentContent = '', editor, entries, onNavigateWikilink, onChange, onImageImportError, sourceEntry, vaultPath, editable = true, locale = 'en' }: {
+export function SingleEditorView({ currentContent = '', editor, entries, onNavigateWikilink, onChange, onImageImportError, onRenderRecovered, sourceEntry, vaultPath, editable = true, locale = 'en' }: {
   currentContent?: string
   editor: ReturnType<typeof useCreateBlockNote>
   entries: VaultEntry[]
   onNavigateWikilink: (target: string) => void
   onChange?: () => void
   onImageImportError?: (error: ImageImportError) => void
+  onRenderRecovered?: () => void
   sourceEntry?: VaultEntry | null
   vaultPath?: string
   editable?: boolean
@@ -1332,7 +1333,10 @@ export function SingleEditorView({ currentContent = '', editor, entries, onNavig
           <div className="editor__drop-overlay-label">Drop image here</div>
         </div>
       )}
-      <BlockNoteRenderRecoveryBoundary onRecover={(_, reason) => repairEditorDocumentForRenderRecovery(editor, reason)}>
+      <BlockNoteRenderRecoveryBoundary onRecover={(_, reason) => {
+        repairEditorDocumentForRenderRecovery(editor, reason)
+        onRenderRecovered?.()
+      }}>
         {(recoveryKey) => (
           <VaultExpressionProvider
             currentContent={currentContent}

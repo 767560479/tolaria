@@ -892,6 +892,21 @@ describe('SettingsPanel', () => {
     }))
   })
 
+  it('clamps AutoGit thresholds and keeps inactive within idle', () => {
+    render(
+      <SettingsPanel open={true} settings={emptySettings} onSave={onSave} onClose={onClose} />
+    )
+
+    fireEvent.change(screen.getByTestId('settings-autogit-idle-threshold'), { target: { value: '10' } })
+    fireEvent.change(screen.getByTestId('settings-autogit-inactive-threshold'), { target: { value: '60' } })
+    fireEvent.click(screen.getByTestId('settings-save'))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+      autogit_idle_threshold_seconds: 15,
+      autogit_inactive_threshold_seconds: 15,
+    }))
+  })
+
   it('saves the AutoGit AI commit-message preference', () => {
     render(
       <SettingsPanel open={true} settings={emptySettings} onSave={onSave} onClose={onClose} />

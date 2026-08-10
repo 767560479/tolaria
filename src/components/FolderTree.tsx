@@ -50,6 +50,8 @@ interface FolderTreeProps {
   onCreateFolder?: (name: string, parent?: FolderCreationParent) => Promise<boolean> | boolean
   onRenameFolder?: (folderPath: string, nextName: string) => Promise<boolean> | boolean
   onDeleteFolder?: (folderPath: string) => void
+  onMoveFolder?: (folderPath: string) => void
+  onDuplicateFolder?: (folderPath: string) => void
   folderFileActions?: FolderFileActions
   noteFileMenu?: FolderTreeNoteMenuProps
   renamingFolderPath?: string | null
@@ -179,6 +181,8 @@ export const FolderTree = memo(function FolderTree({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onMoveFolder,
+  onDuplicateFolder,
   folderFileActions,
   noteFileMenu,
   renamingFolderPath,
@@ -218,6 +222,8 @@ export const FolderTree = memo(function FolderTree({
     handleCreateNoteFromMenu,
     handleCreateFolderFromMenu,
     handleDeleteFromMenu,
+    handleDuplicateFromMenu,
+    handleMoveFromMenu,
     handleOpenMenu,
     handleRevealFromMenu,
     handleRenameFromMenu,
@@ -227,6 +233,8 @@ export const FolderTree = memo(function FolderTree({
     folderFileActions,
     onCreateFolder: onCreateFolder ? openCreateFormForParent : undefined,
     onStartRenameFolder,
+    onMoveFolder,
+    onDuplicateFolder,
   })
   const noteFileContextMenu = useNoteListContextMenu({
     locale,
@@ -299,6 +307,8 @@ export const FolderTree = memo(function FolderTree({
         onCreateFolder={handleCreateFolderFromMenu}
         onCreateNote={handleCreateNoteFromMenu}
         onRename={handleRenameFromMenu}
+        onMove={onMoveFolder ? handleMoveFromMenu : undefined}
+        onDuplicate={onDuplicateFolder ? handleDuplicateFromMenu : undefined}
         locale={locale}
       />
       {noteFileMenu ? noteFileContextMenu.contextMenuNode : null}

@@ -354,6 +354,55 @@ function handleRenameNoteFilename(args: {
   return { new_path: newPath, updated_files: updatedFiles, failed_updates: 0 }
 }
 
+function rewriteMockDuplicateTitles(content: string, suffix: string): string {
+  if (!suffix) return content
+
+  let next = content
+  next = next.replace(/^---\n([\s\S]*?)\n---/, (block, body: string) => {
+    const updatedBody = body.replace(
+      /^([ \t]*title:[ \t]*)(["']?)(.+?)\2([ \t]*)$/m,
+      (_line, prefix: string, quote: string, title: string, trailing: string) => {
+        if (title.endsWith(suffix)) return `${prefix}${quote}${title}${quote}${trailing}`
+        return `${prefix}${quote}${title}${suffix}${quote}${trailing}`
+      },
+    )
+    return `---\n${updatedBody}\n---`
+  })
+
+  const frontmatterMatch = next.match(/^---\n[\s\S]*?\n---(?:\r?\n)?/)
+  const bodyStart = frontmatterMatch ? frontmatterMatch[0].length : 0
+  const prefix = next.slice(0, bodyStart)
+  const body = next.slice(bodyStart)
+  const lines = body.split(/(?<=\n)/)
+  let rebuilt = ''
+  let replaced = false
+  for (const line of lines) {
+    if (replaced) {
+      rebuilt += line
+      continue
+    }
+    const trimmed = line.replace(/[\r\n]+$/, '')
+    const leadingMatch = trimmed.match(/^(\s*)/)
+    const leading = leadingMatch?.[1] ?? ''
+    const contentLine = trimmed.slice(leading.length)
+    if (!contentLine.trim()) {
+      rebuilt += line
+      continue
+    }
+    if (/^# (?!#)/.test(contentLine)) {
+      const title = contentLine.slice(2)
+      const nextTitle = title.endsWith(suffix) ? title : `${title}${suffix}`
+      const newline = line.slice(trimmed.length)
+      rebuilt += `${leading}# ${nextTitle}${newline}`
+      replaced = true
+      continue
+    }
+    rebuilt += line
+    replaced = true
+  }
+  return `${prefix}${rebuilt}`
+}
+
 function handleDuplicateNote(args: { vault_path: string; path: string }) {
   const oldEntry = MOCK_ENTRIES.find(e => e.path === args.path)
   const oldContent = readMockContent({ path: args.path })
@@ -370,12 +419,17 @@ function handleDuplicateNote(args: { vault_path: string; path: string }) {
     index += 1
   }
 
-  writeMockContent({ path: newPath, content: oldContent })
+  const newFilename = newPath.split('/').pop() ?? filename
+  const newStem = extension ? newFilename.slice(0, -extension.length) : newFilename
+  const suffix = newStem.startsWith(stem) ? newStem.slice(stem.length) : ''
+  const nextContent = rewriteMockDuplicateTitles(oldContent, suffix)
+  writeMockContent({ path: newPath, content: nextContent })
   if (oldEntry) {
     MOCK_ENTRIES.push({
       ...oldEntry,
       path: newPath,
-      filename: newPath.split('/').pop() ?? filename,
+      filename: newFilename,
+      title: oldEntry.title.endsWith(suffix) ? oldEntry.title : `${oldEntry.title}${suffix}`,
     })
   }
   syncWindowContent()
@@ -466,6 +520,24 @@ export const mockHandlers: Record<string, (args: any) => any> = {
   get_startup_trace: () => [],
   list_vault: () => MOCK_ENTRIES,
   list_vault_folders: () => [],
+  rename_vault_folder: () => ({ old_path: '', new_path: '' }),
+  delete_vault_folder: (args: { folder_path?: string; folderPath?: string }) => args.folder_path ?? args.folderPath ?? '',
+  move_vault_folder: (args: {
+    folder_path?: string
+    folderPath?: string
+    dest_parent_relative?: string
+    destParentRelative?: string
+  }) => {
+    const folderPath = args.folder_path ?? args.folderPath ?? ''
+    const destParent = (args.dest_parent_relative ?? args.destParentRelative ?? '').replace(/^\/+|\/+$/g, '')
+    const name = folderPath.split('/').filter(Boolean).at(-1) ?? folderPath
+    const newPath = destParent ? `${destParent}/${name}` : name
+    return { old_path: folderPath, new_path: newPath }
+  },
+  duplicate_vault_folder: (args: { folder_path?: string; folderPath?: string }) => {
+    const folderPath = args.folder_path ?? args.folderPath ?? ''
+    return { old_path: folderPath, new_path: `${folderPath} copy` }
+  },
   list_views: () => [],
   save_view_cmd: () => {},
   delete_view_cmd: () => {},

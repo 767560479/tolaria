@@ -241,7 +241,35 @@ fn unique_duplicate_path(source: &Path) -> Result<PathBuf, String> {
     ))
 }
 
+fn path_stem(path: &Path) -> Option<&str> {
+    path.file_stem().and_then(|value| value.to_str()).filter(|value| !value.is_empty())
+}
+
+fn duplicate_title_suffix(source: &Path, destination: &Path) -> String {
+    match (path_stem(source), path_stem(destination)) {
+        (Some(source_stem), Some(dest_stem)) => dest_stem
+            .strip_prefix(source_stem)
+            .filter(|rest| rest.starts_with(" copy"))
+            .unwrap_or("")
+            .to_string(),
+        _ => String::new(),
+    }
+}
+
+fn duplicate_note_bytes(source: &Path, destination: &Path) -> Result<Vec<u8>, String> {
+    let bytes = read_existing_note_bytes(source)?;
+    let suffix = duplicate_title_suffix(source, destination);
+    if suffix.is_empty() {
+        return Ok(bytes);
+    }
+    match String::from_utf8(bytes) {
+        Ok(content) => Ok(super::title_sync::rewrite_titles_for_duplicate(&content, &suffix).into_bytes()),
+        Err(error) => Ok(error.into_bytes()),
+    }
+}
+
 /// Copy a vault file to a unique sibling path (`name copy.ext`, then `name copy 2.ext`, …).
+/// Rewrites frontmatter `title` and the first body H1 with the same ` copy` / ` copy N` suffix.
 pub fn duplicate_note(path: &str) -> Result<DuplicateNoteResult, String> {
     let normalized_path = RawNotePath(path).normalized_for_file_io();
     let source = Path::new(normalized_path.as_ref());
@@ -253,7 +281,7 @@ pub fn duplicate_note(path: &str) -> Result<DuplicateNoteResult, String> {
     }
 
     let destination = unique_duplicate_path(source)?;
-    let bytes = read_existing_note_bytes(source)?;
+    let bytes = duplicate_note_bytes(source, &destination)?;
     let destination_display = destination.to_string_lossy();
     let mut file = fs::OpenOptions::new()
         .write(true)
@@ -296,7 +324,7 @@ mod tests {
         let result = duplicate_note(source.to_str().unwrap()).unwrap();
         let expected = dir.path().join("alpha copy.md");
         assert_eq!(Path::new(&result.new_path), expected.as_path());
-        assert_eq!(fs::read(&expected).unwrap(), b"# Alpha\n");
+        assert_eq!(fs::read_to_string(&expected).unwrap(), "# Alpha copy\n");
         assert!(source.exists());
     }
 
@@ -304,7 +332,7 @@ mod tests {
     fn duplicate_note_increments_when_copy_exists() {
         let dir = TempDir::new().unwrap();
         let source = dir.path().join("alpha.md");
-        fs::write(&source, b"one").unwrap();
+        fs::write(&source, b"# Alpha\n").unwrap();
         fs::write(dir.path().join("alpha copy.md"), b"existing").unwrap();
 
         let result = duplicate_note(source.to_str().unwrap()).unwrap();
@@ -312,6 +340,27 @@ mod tests {
             Path::new(&result.new_path),
             dir.path().join("alpha copy 2.md").as_path()
         );
+        assert_eq!(
+            fs::read_to_string(dir.path().join("alpha copy 2.md")).unwrap(),
+            "# Alpha copy 2\n"
+        );
+    }
+
+    #[test]
+    fn duplicate_note_rewrites_frontmatter_title() {
+        let dir = TempDir::new().unwrap();
+        let source = dir.path().join("alpha.md");
+        fs::write(
+            &source,
+            b"---\ntitle: Alpha\ntype: Note\n---\n# Alpha\n\nBody\n",
+        )
+        .unwrap();
+
+        let result = duplicate_note(source.to_str().unwrap()).unwrap();
+        let content = fs::read_to_string(&result.new_path).unwrap();
+        assert!(content.contains("title: Alpha copy"));
+        assert!(content.contains("# Alpha copy\n"));
+        assert!(content.contains("type: Note"));
     }
 
     #[test]

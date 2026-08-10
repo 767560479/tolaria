@@ -19,10 +19,15 @@ import { SettingsPanel } from './components/SettingsPanel'
 import { CloneVaultModal } from './components/CloneVaultModal'
 import { FeedbackDialog } from './components/FeedbackDialog'
 import { NoteRetargetingDialogs } from './components/note-retargeting/NoteRetargetingDialogs'
+import { RetargetNoteDialog } from './components/note-retargeting/RetargetNoteDialog'
 import { StartupShellFallback } from './components/StartupShellFallback'
 import { StartupScreen } from './components/StartupScreen'
 import { useVaultAiGuidanceStatus } from './hooks/useVaultAiGuidanceStatus'
 import { useAutoGit } from './hooks/useAutoGit'
+import {
+  sanitizeAutoGitIdleThreshold,
+  sanitizeAutoGitInactiveThreshold,
+} from './utils/autoGitThresholds'
 import { useVaultLoader } from './hooks/useVaultLoader'
 import { useRecentVaultWrites, useVaultWatcher } from './hooks/useVaultWatcher'
 import { useSettings } from './hooks/useSettings'
@@ -909,6 +914,7 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
 
   const folderActions = useFolderActions({
     vaultPath: resolvedPath,
+    folders: vault.folders,
     selection: effectiveSelection,
     setSelection: handleSetSelection,
     setTabs: notes.setTabs,
@@ -1013,8 +1019,11 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
   })
   const autoGit = useAutoGit({
     enabled: automaticGitEnabled && settings.autogit_enabled === true,
-    idleThresholdSeconds: settings.autogit_idle_threshold_seconds ?? 90,
-    inactiveThresholdSeconds: settings.autogit_inactive_threshold_seconds ?? 30,
+    idleThresholdSeconds: sanitizeAutoGitIdleThreshold(settings.autogit_idle_threshold_seconds),
+    inactiveThresholdSeconds: sanitizeAutoGitInactiveThreshold(
+      settings.autogit_inactive_threshold_seconds,
+      settings.autogit_idle_threshold_seconds ?? undefined,
+    ),
     isGitVault,
     hasPendingChanges: autoGitHasPendingWork,
     hasUnsavedChanges: vault.unsavedPaths.size > 0,
@@ -1316,6 +1325,7 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     || dialogs.showConflictResolver
     || dialogs.showCreateViewDialog
     || noteRetargetingUi.isDialogOpen
+    || folderActions.movingFolderPath !== null
     || showFeedback
   )
 
@@ -1757,7 +1767,7 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
           {sidebarVisible && (
             <>
               <div className="app__sidebar" style={{ width: layout.sidebarWidth }}>
-                <Sidebar entries={visibleEntries} folders={vault.folders} views={vault.views} selection={effectiveSelection} onSelect={handleSetSelection} onSelectNote={notes.handleSelectNote} activeNotePath={notes.activeTabPath} onSelectFavorite={handleOpenFavorite} onReorderFavorites={entryActions.handleReorderFavorites} onCreateType={notes.handleCreateNoteImmediate} onCreateNewType={dialogs.openCreateType} onCustomizeType={entryActions.handleCustomizeType} onUpdateTypeTemplate={entryActions.handleUpdateTypeTemplate} onReorderSections={entryActions.handleReorderSections} onRenameSection={entryActions.handleRenameSection} onDeleteType={handleDeleteType} onToggleTypeVisibility={entryActions.handleToggleTypeVisibility} onCreateFolder={handleCreateFolder} onRenameFolder={folderActions.renameFolder} onDeleteFolder={folderActions.requestDeleteFolder} folderFileActions={fileActions.folderActions} noteFileMenu={noteFileMenu} renamingFolderPath={folderActions.renamingFolderPath} onStartRenameFolder={folderActions.startFolderRename} onCancelRenameFolder={folderActions.cancelFolderRename} onCanDropNoteOnFolder={noteRetargetingUi.canDropNoteOnFolder} onMoveNoteToFolder={noteRetargetingUi.moveIntoFolder} onCreateView={dialogs.openCreateView} onEditView={handleEditView} onDeleteView={handleDeleteView} onUpdateViewDefinition={handleSidebarUpdateViewDefinition} onReorderViews={canReorderSavedViews ? viewOrdering.onReorderViews : undefined} allNotesFileVisibility={allNotesFileVisibility} pluralizeTypeLabels={settings.sidebar_type_pluralization_enabled ?? true} onCollapse={handleCollapseSidebar} onFindInVault={handleFindInVault} onGoBack={handleGoBack} onGoForward={handleGoForward} canGoBack={canGoBack} canGoForward={canGoForward} locale={appLocale} loading={isVaultContentLoading} vaultRootPath={resolvedPath} workspaceOrder={vaultWorkspaceOrder} />
+                <Sidebar entries={visibleEntries} folders={vault.folders} views={vault.views} selection={effectiveSelection} onSelect={handleSetSelection} onSelectNote={notes.handleSelectNote} activeNotePath={notes.activeTabPath} onSelectFavorite={handleOpenFavorite} onReorderFavorites={entryActions.handleReorderFavorites} onCreateType={notes.handleCreateNoteImmediate} onCreateNewType={dialogs.openCreateType} onCustomizeType={entryActions.handleCustomizeType} onUpdateTypeTemplate={entryActions.handleUpdateTypeTemplate} onReorderSections={entryActions.handleReorderSections} onRenameSection={entryActions.handleRenameSection} onDeleteType={handleDeleteType} onToggleTypeVisibility={entryActions.handleToggleTypeVisibility} onCreateFolder={handleCreateFolder} onRenameFolder={folderActions.renameFolder} onDeleteFolder={folderActions.requestDeleteFolder} onMoveFolder={folderActions.openMoveFolderDialog} onDuplicateFolder={folderActions.duplicateFolder} folderFileActions={fileActions.folderActions} noteFileMenu={noteFileMenu} renamingFolderPath={folderActions.renamingFolderPath} onStartRenameFolder={folderActions.startFolderRename} onCancelRenameFolder={folderActions.cancelFolderRename} onCanDropNoteOnFolder={noteRetargetingUi.canDropNoteOnFolder} onMoveNoteToFolder={noteRetargetingUi.moveIntoFolder} onCreateView={dialogs.openCreateView} onEditView={handleEditView} onDeleteView={handleDeleteView} onUpdateViewDefinition={handleSidebarUpdateViewDefinition} onReorderViews={canReorderSavedViews ? viewOrdering.onReorderViews : undefined} allNotesFileVisibility={allNotesFileVisibility} pluralizeTypeLabels={settings.sidebar_type_pluralization_enabled ?? true} onCollapse={handleCollapseSidebar} onFindInVault={handleFindInVault} onGoBack={handleGoBack} onGoForward={handleGoForward} canGoBack={canGoBack} canGoForward={canGoForward} locale={appLocale} loading={isVaultContentLoading} vaultRootPath={resolvedPath} workspaceOrder={vaultWorkspaceOrder} />
               </div>
               <ResizeHandle onResize={layout.handleSidebarResize} />
             </>
@@ -1894,6 +1904,19 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
           onClose={noteRetargetingUi.closeDialog}
           onSelectType={noteRetargetingUi.selectType}
           onSelectFolder={noteRetargetingUi.selectFolder}
+        />
+        <RetargetNoteDialog
+          open={folderActions.movingFolderPath !== null}
+          title={translate(appLocale, 'folder.move.dialogTitle')}
+          description={translate(appLocale, 'folder.move.dialogDescription', {
+            name: folderActions.movingFolderLabel ?? '',
+          })}
+          searchPlaceholder={translate(appLocale, 'folder.move.searchPlaceholder')}
+          emptyMessage={translate(appLocale, 'folder.move.emptyMessage')}
+          options={folderActions.moveFolderOptions}
+          onClose={folderActions.closeMoveFolderDialog}
+          onSelect={folderActions.moveFolderToParent}
+          testIdPrefix="move-folder"
         />
         <CreateViewDialog open={dialogs.showCreateViewDialog} onClose={dialogs.closeCreateView} onCreate={handleCreateOrUpdateView} availableFields={availableFields} locale={appLocale} editingView={dialogs.editingView?.definition ?? null} />
         <CommitDialog

@@ -535,6 +535,7 @@ function EditorLayout({
   workspaces,
   onUnsupportedAiPaste,
   onImageImportError,
+  onRenderRecovered,
   locale,
 }: {
   tabs: Tab[]
@@ -617,6 +618,7 @@ function EditorLayout({
   workspaces?: WorkspaceIdentity[]
   onUnsupportedAiPaste?: (message: string) => void
   onImageImportError?: ImageImportErrorHandler
+  onRenderRecovered?: () => void
   locale?: AppLocale
   onExportPdf?: (source?: NotePdfExportSource) => void
 }) {
@@ -701,6 +703,7 @@ function EditorLayout({
               onKeepMine={onKeepMine}
               onKeepTheirs={onKeepTheirs}
               onImageImportError={onImageImportError}
+              onRenderRecovered={onRenderRecovered}
               locale={locale}
             />
         }
@@ -774,6 +777,9 @@ export const Editor = memo(function Editor(props: EditorProps) {
   const handleImageImportError = useCallback((error: ImageImportError) => {
     onToast?.(imageImportErrorMessage(error, locale))
   }, [locale, onToast])
+  const handleRenderRecovered = useCallback(() => {
+    onToast?.(translate(locale, 'editor.render.recovered'))
+  }, [locale, onToast])
   const runtime = useEditorSetup({
     tabs: props.tabs,
     activeTabPath: props.activeTabPath,
@@ -833,6 +839,7 @@ export const Editor = memo(function Editor(props: EditorProps) {
     <EditorLayout
       {...buildEditorLayoutProps(props, runtime, findRequest)}
       onImageImportError={handleImageImportError}
+      onRenderRecovered={handleRenderRecovered}
       onToggleInspector={rightPanel.handleToggleInspectorPanel}
       showAIChat={props.showAIChat}
       onToggleAIChat={props.onToggleAIChat ? rightPanel.handleToggleAIChatPanel : undefined}

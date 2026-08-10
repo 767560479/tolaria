@@ -38,6 +38,7 @@ import { shouldHideGitignoredFiles } from '../lib/gitignoredVisibility'
 import { areGitFeaturesEnabled } from '../lib/gitSettings'
 import { areAiFeaturesEnabled } from '../lib/aiFeatures'
 import { normalizePicgoServerToken, normalizePicgoServerUrl } from '../lib/picgoServer'
+import { sanitizeAutoGitThresholdPair } from '../utils/autoGitThresholds'
 import { trackAllNotesVisibilityChanged } from '../lib/productAnalytics'
 import { AiProviderSettings } from './AiProviderSettings'
 import { GitSettingsSection } from './GitSettingsSection'
@@ -191,8 +192,6 @@ interface SettingsBodyProps {
 }
 
 const PULL_INTERVAL_OPTIONS = [1, 2, 5, 10, 15, 30] as const
-const DEFAULT_AUTOGIT_IDLE_THRESHOLD_SECONDS = 90
-const DEFAULT_AUTOGIT_INACTIVE_THRESHOLD_SECONDS = 30
 type Translate = ReturnType<typeof createTranslator>
 
 function isSaveShortcut(event: { ctrlKey: boolean; key: string; metaKey: boolean }): boolean {
@@ -203,6 +202,10 @@ function createSettingsDraft(
   settings: Settings,
   explicitOrganizationEnabled: boolean,
 ): SettingsDraft {
+  const autoGitThresholds = sanitizeAutoGitThresholdPair({
+    idle: settings.autogit_idle_threshold_seconds,
+    inactive: settings.autogit_inactive_threshold_seconds,
+  })
   return {
     pullInterval: settings.auto_pull_interval_minutes ?? 5,
     gitFeaturesEnabled: areGitFeaturesEnabled(settings),
@@ -210,14 +213,8 @@ function createSettingsDraft(
     gitWslDistro: settings.git_wsl_distro?.trim() || null,
     autoGitEnabled: settings.autogit_enabled ?? false,
     autoGitAiCommitMessagesEnabled: settings.autogit_use_ai_commit_messages ?? false,
-    autoGitIdleThresholdSeconds: sanitizePositiveInteger(
-      settings.autogit_idle_threshold_seconds,
-      DEFAULT_AUTOGIT_IDLE_THRESHOLD_SECONDS,
-    ),
-    autoGitInactiveThresholdSeconds: sanitizePositiveInteger(
-      settings.autogit_inactive_threshold_seconds,
-      DEFAULT_AUTOGIT_INACTIVE_THRESHOLD_SECONDS,
-    ),
+    autoGitIdleThresholdSeconds: autoGitThresholds.idle,
+    autoGitInactiveThresholdSeconds: autoGitThresholds.inactive,
     autoAdvanceInboxAfterOrganize: settings.auto_advance_inbox_after_organize ?? false,
     aiFeaturesEnabled: areAiFeaturesEnabled(settings),
     defaultAiAgent: resolveDefaultAiAgent(settings.default_ai_agent),
@@ -260,6 +257,10 @@ function resolveAnonymousId(settings: Settings, draft: SettingsDraft): string | 
 }
 
 function buildSettingsFromDraft(settings: Settings, draft: SettingsDraft): Settings {
+  const autoGitThresholds = sanitizeAutoGitThresholdPair({
+    idle: draft.autoGitIdleThresholdSeconds,
+    inactive: draft.autoGitInactiveThresholdSeconds,
+  })
   const nextSettings = {
     auto_pull_interval_minutes: draft.pullInterval,
     git_enabled: draft.gitFeaturesEnabled,
@@ -267,8 +268,8 @@ function buildSettingsFromDraft(settings: Settings, draft: SettingsDraft): Setti
     git_wsl_distro: draft.gitProvider === 'wsl' ? draft.gitWslDistro : null,
     autogit_enabled: draft.autoGitEnabled,
     autogit_use_ai_commit_messages: draft.autoGitAiCommitMessagesEnabled,
-    autogit_idle_threshold_seconds: draft.autoGitIdleThresholdSeconds,
-    autogit_inactive_threshold_seconds: draft.autoGitInactiveThresholdSeconds,
+    autogit_idle_threshold_seconds: autoGitThresholds.idle,
+    autogit_inactive_threshold_seconds: autoGitThresholds.inactive,
     auto_advance_inbox_after_organize: draft.autoAdvanceInboxAfterOrganize,
     telemetry_consent: resolveTelemetryConsent(settings, draft),
     crash_reporting_enabled: draft.crashReporting,
@@ -296,11 +297,6 @@ function buildSettingsFromDraft(settings: Settings, draft: SettingsDraft): Setti
 
 function normalizeSettingsGitProvider(value: Settings['git_provider']): GitProviderId {
   return value === 'wsl' ? 'wsl' : 'native'
-}
-
-function sanitizePositiveInteger(value: number | null | undefined, fallback: number): number {
-  if (value === null || value === undefined || !Number.isFinite(value) || value < 1) return fallback
-  return Math.round(value)
 }
 
 function applyThemeModeSelection(value: ThemeMode): void {
@@ -567,9 +563,23 @@ function SettingsBodyFromDraft({
       autoGitAiCommitMessagesEnabled={draft.autoGitAiCommitMessagesEnabled}
       setAutoGitAiCommitMessagesEnabled={(value) => updateDraft('autoGitAiCommitMessagesEnabled', value)}
       autoGitIdleThresholdSeconds={draft.autoGitIdleThresholdSeconds}
-      setAutoGitIdleThresholdSeconds={(value) => updateDraft('autoGitIdleThresholdSeconds', value)}
+      setAutoGitIdleThresholdSeconds={(value) => {
+        const next = sanitizeAutoGitThresholdPair({
+          idle: value,
+          inactive: draft.autoGitInactiveThresholdSeconds,
+        })
+        updateDraft('autoGitIdleThresholdSeconds', next.idle)
+        updateDraft('autoGitInactiveThresholdSeconds', next.inactive)
+      }}
       autoGitInactiveThresholdSeconds={draft.autoGitInactiveThresholdSeconds}
-      setAutoGitInactiveThresholdSeconds={(value) => updateDraft('autoGitInactiveThresholdSeconds', value)}
+      setAutoGitInactiveThresholdSeconds={(value) => {
+        const next = sanitizeAutoGitThresholdPair({
+          idle: draft.autoGitIdleThresholdSeconds,
+          inactive: value,
+        })
+        updateDraft('autoGitIdleThresholdSeconds', next.idle)
+        updateDraft('autoGitInactiveThresholdSeconds', next.inactive)
+      }}
       autoAdvanceInboxAfterOrganize={draft.autoAdvanceInboxAfterOrganize}
       setAutoAdvanceInboxAfterOrganize={(value) => updateDraft('autoAdvanceInboxAfterOrganize', value)}
       aiFeaturesEnabled={draft.aiFeaturesEnabled}

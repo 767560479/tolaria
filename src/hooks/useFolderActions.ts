@@ -1,10 +1,13 @@
 import type { FolderNode, SidebarSelection, VaultEntry } from '../types'
 import type { FolderTab } from './folder-actions/folderActionUtils'
 import { useFolderDelete } from './folder-actions/useFolderDelete'
+import { useFolderDuplicate } from './folder-actions/useFolderDuplicate'
+import { useFolderMove } from './folder-actions/useFolderMove'
 import { useFolderRename } from './folder-actions/useFolderRename'
 
 interface UseFolderActionsInput {
   vaultPath: string
+  folders: FolderNode[]
   selection: SidebarSelection
   setSelection: (selection: SidebarSelection) => void
   setTabs: React.Dispatch<React.SetStateAction<FolderTab[]>>
@@ -18,6 +21,7 @@ interface UseFolderActionsInput {
 
 export function useFolderActions({
   vaultPath,
+  folders,
   selection,
   setSelection,
   setTabs,
@@ -51,9 +55,30 @@ export function useFolderActions({
     setToastMessage,
     vaultPath,
   })
+  const moveActions = useFolderMove({
+    activeTabPathRef,
+    folders,
+    handleSwitchTab,
+    reloadFolders,
+    reloadVault,
+    selection,
+    setSelection,
+    setTabs,
+    setToastMessage,
+    vaultPath,
+  })
+  const duplicateActions = useFolderDuplicate({
+    reloadFolders,
+    reloadVault,
+    setSelection,
+    setToastMessage,
+    vaultPath,
+  })
 
   return {
     ...renameActions,
     ...deleteActions,
+    ...moveActions,
+    ...duplicateActions,
   }
 }

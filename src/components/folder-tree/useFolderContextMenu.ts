@@ -9,6 +9,8 @@ interface UseFolderContextMenuInput {
   folderFileActions?: FolderFileActions
   onCreateFolder?: (folderPath: string, rootPath?: string) => void
   onStartRenameFolder?: (folderPath: string) => void
+  onMoveFolder?: (folderPath: string) => void
+  onDuplicateFolder?: (folderPath: string) => void
 }
 
 export function useFolderContextMenu({
@@ -16,6 +18,8 @@ export function useFolderContextMenu({
   folderFileActions,
   onCreateFolder,
   onStartRenameFolder,
+  onMoveFolder,
+  onDuplicateFolder,
 }: UseFolderContextMenuInput) {
   const {
     closeContextMenu,
@@ -42,6 +46,16 @@ export function useFolderContextMenu({
     closeContextMenu()
     onStartRenameFolder?.(folderPath)
   }, [closeContextMenu, onStartRenameFolder])
+
+  const handleMoveFromMenu = useCallback((folderPath: string) => {
+    closeContextMenu()
+    onMoveFolder?.(folderPath)
+  }, [closeContextMenu, onMoveFolder])
+
+  const handleDuplicateFromMenu = useCallback((folderPath: string) => {
+    closeContextMenu()
+    onDuplicateFolder?.(folderPath)
+  }, [closeContextMenu, onDuplicateFolder])
 
   const handleDeleteFromMenu = useCallback((folderPath: string) => {
     closeContextMenu()
@@ -71,6 +85,8 @@ export function useFolderContextMenu({
     handleCreateFolderFromMenu,
     handleCreateNoteFromMenu,
     handleDeleteFromMenu,
+    handleDuplicateFromMenu,
+    handleMoveFromMenu,
     handleOpenMenu,
     handleRevealFromMenu,
     handleRenameFromMenu,

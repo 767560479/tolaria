@@ -152,23 +152,32 @@ export function NumberInputControl({
   testId,
   ariaLabel,
   disabled = false,
+  min = 1,
+  max,
 }: {
   value: number
   onValueChange: (value: number) => void
   testId: string
   ariaLabel: string
   disabled?: boolean
+  min?: number
+  max?: number
 }) {
   return (
     <Input
       id={testId}
       type="number"
-      min={1}
+      min={min}
+      max={max}
       step={1}
       value={value}
       disabled={disabled}
       aria-label={ariaLabel}
-      onChange={(event) => onValueChange(sanitizePositiveInteger(Number(event.target.value), value))}
+      onChange={(event) => {
+        const next = sanitizePositiveInteger(Number(event.target.value), value)
+        const clampedMin = Math.max(next, min)
+        onValueChange(max === undefined ? clampedMin : Math.min(clampedMin, max))
+      }}
       data-testid={testId}
       className="w-full bg-transparent"
     />

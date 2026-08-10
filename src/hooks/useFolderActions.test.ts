@@ -70,6 +70,7 @@ function renderFolderActions({
 
     const actions = useFolderActions({
       vaultPath: '/vault',
+      folders: [{ name: 'projects', path: 'projects', children: [] }],
       selection,
       setSelection,
       setTabs,
@@ -141,7 +142,7 @@ describe('useFolderActions', () => {
       await result.current.actions.confirmDeleteSelectedFolder()
     })
 
-    expect(result.current.selection).toEqual({ kind: 'filter', filter: 'all' })
+    expect(result.current.selection).toEqual({ kind: 'folder', path: '' })
     expect(result.current.tabs).toEqual([])
     expect(result.current.activeTabPath).toBeNull()
     expect(setToastMessage).toHaveBeenCalledWith('Deleted folder "projects"')

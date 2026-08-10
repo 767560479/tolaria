@@ -286,6 +286,8 @@ macro_rules! app_invoke_handler {
             commands::create_vault_folder,
             commands::rename_vault_folder,
             commands::delete_vault_folder,
+            commands::move_vault_folder,
+            commands::duplicate_vault_folder,
             commands::batch_archive_notes,
             commands::get_settings,
             macos_fullscreen_escape::set_macos_dismissable_escape_surface_open,

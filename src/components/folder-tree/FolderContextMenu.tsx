@@ -1,5 +1,5 @@
 import type { RefObject, ReactNode } from 'react'
-import { ClipboardText, FolderOpen, FolderPlus, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
+import { ArrowsOutCardinal, ClipboardText, CopySimple, FolderOpen, FolderPlus, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { translate, type AppLocale } from '../../lib/i18n'
 import { translateRevealInFileManager } from '../../lib/revealInFileManager'
@@ -27,6 +27,8 @@ interface FolderContextMenuProps {
   onCreateFolder?: (folderPath: string, rootPath?: string) => void
   onCreateNote?: (folderPath: string, rootPath?: string) => void
   onRename: (folderPath: string) => void
+  onMove?: (folderPath: string) => void
+  onDuplicate?: (folderPath: string) => void
   locale?: AppLocale
 }
 
@@ -44,6 +46,8 @@ export function FolderContextMenu(props: FolderContextMenuProps) {
     onCreateFolder,
     onCreateNote,
     onRename,
+    onMove,
+    onDuplicate,
     locale = 'en',
   } = props
 
@@ -106,6 +110,30 @@ export function FolderContextMenu(props: FolderContextMenuProps) {
         >
           <ClipboardText size={14} className="shrink-0" />
           <FolderMenuLabel>{translate(locale, 'sidebar.action.copyFolderPathMenu')}</FolderMenuLabel>
+        </Button>
+      )}
+      {canMutateFolder && onMove && (
+        <Button
+          type="button"
+          variant="ghost"
+          className={folderContextMenuButtonClass}
+          onClick={() => onMove(menu.path)}
+          data-testid="move-folder-menu-item"
+        >
+          <ArrowsOutCardinal size={14} className="shrink-0" />
+          <FolderMenuLabel>{translate(locale, 'sidebar.action.moveFolderMenu')}</FolderMenuLabel>
+        </Button>
+      )}
+      {canMutateFolder && onDuplicate && (
+        <Button
+          type="button"
+          variant="ghost"
+          className={folderContextMenuButtonClass}
+          onClick={() => onDuplicate(menu.path)}
+          data-testid="duplicate-folder-menu-item"
+        >
+          <CopySimple size={14} className="shrink-0" />
+          <FolderMenuLabel>{translate(locale, 'sidebar.action.duplicateFolderMenu')}</FolderMenuLabel>
         </Button>
       )}
       {canMutateFolder && (
