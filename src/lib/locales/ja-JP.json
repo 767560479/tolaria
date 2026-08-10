@@ -1015,5 +1015,11 @@
   "locale.idID": "インドネシア語",
   "locale.ukUA": "ウクライナ語",
   "locale.svSE": "スウェーデン語",
-  "locale.skSK": "スロバキア語"
+  "locale.skSK": "スロバキア語",
+  "command.note.duplicateNote": "ノートを複製",
+  "command.note.closeOtherTabs": "他のタブを閉じる",
+  "command.note.closeAllTabs": "すべてのタブを閉じる",
+  "editor.tabs.closeUnsavedTitle": "未保存の編集を破棄しますか？",
+  "editor.tabs.closeUnsavedMessage": "{count} 件の開いているノートに未保存の編集があります。閉じると変更は破棄されます。",
+  "editor.tabs.closeUnsavedConfirm": "破棄して閉じる"
 }

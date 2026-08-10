@@ -29,6 +29,7 @@ import { useSettings } from './hooks/useSettings'
 import { useNoteWidthMode } from './hooks/useNoteWidthMode'
 import { useNoteActions } from './hooks/useNoteActions'
 import { useNoteDuplicate } from './hooks/useNoteDuplicate'
+import { useCloseTabsConfirmation } from './hooks/useCloseTabsConfirmation'
 import { useCommitFlow } from './hooks/useCommitFlow'
 import { useGitRepositories } from './hooks/useGitRepositories'
 import { useEntryActions } from './hooks/useEntryActions'
@@ -1288,6 +1289,14 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     setToastMessage,
     onOpenEntry: notes.handleSelectNote,
   })
+  const closeTabsConfirmation = useCloseTabsConfirmation({
+    tabs: notes.tabs,
+    unsavedPaths: vault.unsavedPaths,
+    clearUnsaved: vault.clearUnsaved,
+    closeOtherTabs: notes.handleCloseOtherTabs,
+    closeAllTabs: notes.closeAllTabs,
+    locale: appLocale,
+  })
   const openMoveNoteToFolderDialogFor = noteRetargetingUi.openMoveNoteToFolderDialogFor
   const handleMoveNoteEntryToFolder = useCallback((entry: VaultEntry) => {
     openMoveNoteToFolderDialogFor(entry.path)
@@ -1421,6 +1430,14 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
   })
   const activeTabEntry = activeTab?.entry ?? null
   const activeTabPath = activeTabEntry?.path
+  const handleDuplicateActiveNote = useCallback(() => {
+    if (!activeTabEntry) return
+    void noteDuplicate.handleDuplicateNote(activeTabEntry)
+  }, [activeTabEntry, noteDuplicate])
+  const handleCloseOtherTabsCommand = useCallback(() => {
+    if (!notes.activeTabPath) return
+    closeTabsConfirmation.requestCloseOtherTabs(notes.activeTabPath)
+  }, [closeTabsConfirmation, notes.activeTabPath])
   const handleSelectNoteForPdfExport = notes.handleSelectNote
   const handleExportNotePdfFromList = useCallback((entry: VaultEntry) => {
     if (!isMarkdownEntry(entry)) return
@@ -1627,6 +1644,11 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     onChangeNoteType: changeNoteTypeCommand,
     onMoveNoteToFolder: moveNoteToFolderCommand,
     canMoveNoteToFolder: noteRetargetingUi.canMoveActiveNoteToFolder,
+    onDuplicateNote: handleDuplicateActiveNote,
+    onCloseOtherTabs: handleCloseOtherTabsCommand,
+    onCloseAllTabs: closeTabsConfirmation.requestCloseAllTabs,
+    canCloseOtherTabs: closeTabsConfirmation.canCloseOtherTabs,
+    canCloseAllTabs: closeTabsConfirmation.canCloseAllTabs,
     activeNoteHasIcon,
     noteListFilter,
     onSetNoteListFilter: setNoteListFilter,
@@ -1758,8 +1780,8 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
               activeTabPath={notes.activeTabPath}
               onSwitchTab={notes.handleSwitchTab}
               onCloseTab={notes.handleCloseTab}
-              onCloseOtherTabs={notes.handleCloseOtherTabs}
-              onCloseAllTabs={notes.closeAllTabs}
+              onCloseOtherTabs={closeTabsConfirmation.requestCloseOtherTabs}
+              onCloseAllTabs={closeTabsConfirmation.requestCloseAllTabs}
               unsavedPaths={vault.unsavedPaths}
               isVaultLoading={isVaultContentLoading}
               entries={visibleEntries}
@@ -1914,6 +1936,16 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
             confirmLabel={deleteActions.confirmDelete.confirmLabel}
             onConfirm={deleteActions.confirmDelete.onConfirm}
             onCancel={() => deleteActions.setConfirmDelete(null)}
+          />
+        )}
+        {closeTabsConfirmation.confirmClose && (
+          <ConfirmDeleteDialog
+            open={true}
+            title={closeTabsConfirmation.confirmClose.title}
+            message={closeTabsConfirmation.confirmClose.message}
+            confirmLabel={closeTabsConfirmation.confirmClose.confirmLabel}
+            onConfirm={closeTabsConfirmation.confirmClose.onConfirm}
+            onCancel={closeTabsConfirmation.cancelConfirmClose}
           />
         )}
         {folderActions.confirmDeleteFolder && (

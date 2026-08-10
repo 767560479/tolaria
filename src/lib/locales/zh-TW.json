@@ -1015,5 +1015,11 @@
   "locale.idID": "印尼",
   "locale.ukUA": "烏克蘭語",
   "locale.svSE": "瑞典語",
-  "locale.skSK": "斯洛伐克語"
+  "locale.skSK": "斯洛伐克語",
+  "command.note.duplicateNote": "複製筆記",
+  "command.note.closeOtherTabs": "關閉其他分頁",
+  "command.note.closeAllTabs": "關閉全部分頁",
+  "editor.tabs.closeUnsavedTitle": "捨棄未儲存的編輯？",
+  "editor.tabs.closeUnsavedMessage": "有 {count} 個已開啟筆記含未儲存編輯。關閉將捨棄這些變更。",
+  "editor.tabs.closeUnsavedConfirm": "捨棄並關閉"
 }

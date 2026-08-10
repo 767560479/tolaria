@@ -1015,5 +1015,11 @@
   "locale.idID": "Indonésio",
   "locale.ukUA": "Ucraniano",
   "locale.svSE": "Sueco",
-  "locale.skSK": "Eslovaco"
+  "locale.skSK": "Eslovaco",
+  "command.note.duplicateNote": "Duplicar nota",
+  "command.note.closeOtherTabs": "Cerrar otras pestañas",
+  "command.note.closeAllTabs": "Cerrar todas las pestañas",
+  "editor.tabs.closeUnsavedTitle": "¿Descartar ediciones sin guardar?",
+  "editor.tabs.closeUnsavedMessage": "{count} nota(s) abierta(s) tienen ediciones sin guardar. Cerrar descartará esos cambios.",
+  "editor.tabs.closeUnsavedConfirm": "Descartar y cerrar"
 }

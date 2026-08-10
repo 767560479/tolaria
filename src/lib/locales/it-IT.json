@@ -1015,5 +1015,11 @@
   "locale.idID": "Indonesiano",
   "locale.ukUA": "Ucraino",
   "locale.svSE": "Svedese",
-  "locale.skSK": "Slovacco"
+  "locale.skSK": "Slovacco",
+  "command.note.duplicateNote": "Duplica nota",
+  "command.note.closeOtherTabs": "Chiudi altre schede",
+  "command.note.closeAllTabs": "Chiudi tutte le schede",
+  "editor.tabs.closeUnsavedTitle": "Scartare le modifiche non salvate?",
+  "editor.tabs.closeUnsavedMessage": "{count} nota/e aperta/e ha/hanno modifiche non salvate. Chiudere scarterà tali modifiche.",
+  "editor.tabs.closeUnsavedConfirm": "Scarta e chiudi"
 }

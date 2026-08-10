@@ -38,6 +38,11 @@ interface NoteCommandsConfig {
   onChangeNoteType?: () => void
   onMoveNoteToFolder?: () => void
   canMoveNoteToFolder?: boolean
+  onDuplicateNote?: () => void
+  onCloseOtherTabs?: () => void
+  onCloseAllTabs?: () => void
+  canCloseOtherTabs?: boolean
+  canCloseAllTabs?: boolean
   onTurnCurrentBlockInto?: (target: RichEditorBlockTypeDefinition) => void
   onSetNoteIcon?: () => void
   onRemoveNoteIcon?: () => void
@@ -223,6 +228,7 @@ function buildOptionalNoteCommands(config: NoteCommandsConfig): CommandAction[] 
     ...buildRecoveryCommands(config),
     ...buildFileActionCommands(config),
     ...buildRetargetingCommands(config),
+    ...buildTabCloseCommands(config),
     ...buildPresentationCommands(config),
   ]
 }
@@ -261,6 +267,32 @@ function buildRetargetingCommands(config: NoteCommandsConfig): CommandAction[] {
       keywords: ['folder', 'move', 'retarget', 'organize'],
       enabled: config.hasActiveNote && !!config.onMoveNoteToFolder && !!config.canMoveNoteToFolder,
       execute: () => config.onMoveNoteToFolder?.(),
+    }),
+    createNoteCommand({
+      id: 'duplicate-note',
+      label: 'Duplicate Note',
+      keywords: ['duplicate', 'copy', 'clone', 'note'],
+      enabled: config.hasActiveNote && !!config.onDuplicateNote,
+      execute: () => config.onDuplicateNote?.(),
+    }),
+  ]
+}
+
+function buildTabCloseCommands(config: NoteCommandsConfig): CommandAction[] {
+  return [
+    createNoteCommand({
+      id: 'close-other-tabs',
+      label: 'Close Other Tabs',
+      keywords: ['close', 'tab', 'tabs', 'other', 'others'],
+      enabled: !!config.onCloseOtherTabs && !!config.canCloseOtherTabs,
+      execute: () => config.onCloseOtherTabs?.(),
+    }),
+    createNoteCommand({
+      id: 'close-all-tabs',
+      label: 'Close All Tabs',
+      keywords: ['close', 'tab', 'tabs', 'all'],
+      enabled: !!config.onCloseAllTabs && !!config.canCloseAllTabs,
+      execute: () => config.onCloseAllTabs?.(),
     }),
   ]
 }

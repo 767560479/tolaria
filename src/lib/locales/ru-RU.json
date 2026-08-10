@@ -1015,5 +1015,11 @@
   "locale.idID": "индонезийский",
   "locale.ukUA": "Украинский",
   "locale.svSE": "Шведский",
-  "locale.skSK": "Словацкий"
+  "locale.skSK": "Словацкий",
+  "command.note.duplicateNote": "Дублировать заметку",
+  "command.note.closeOtherTabs": "Закрыть другие вкладки",
+  "command.note.closeAllTabs": "Закрыть все вкладки",
+  "editor.tabs.closeUnsavedTitle": "Отменить несохранённые изменения?",
+  "editor.tabs.closeUnsavedMessage": "У {count} открытой(ых) заметки(ок) есть несохранённые изменения. Закрытие отменит эти изменения.",
+  "editor.tabs.closeUnsavedConfirm": "Отменить и закрыть"
 }

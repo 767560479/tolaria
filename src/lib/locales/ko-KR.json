@@ -1015,5 +1015,11 @@
   "locale.idID": "인도네시아 공화국",
   "locale.ukUA": "우크라이나어",
   "locale.svSE": "스웨덴어",
-  "locale.skSK": "슬로바키아어"
+  "locale.skSK": "슬로바키아어",
+  "command.note.duplicateNote": "노트 복제",
+  "command.note.closeOtherTabs": "다른 탭 닫기",
+  "command.note.closeAllTabs": "모든 탭 닫기",
+  "editor.tabs.closeUnsavedTitle": "저장되지 않은 편집을 버릴까요?",
+  "editor.tabs.closeUnsavedMessage": "열린 노트 {count}개에 저장되지 않은 편집이 있습니다. 닫으면 변경 내용이 버려집니다.",
+  "editor.tabs.closeUnsavedConfirm": "버리고 닫기"
 }

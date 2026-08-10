@@ -308,6 +308,46 @@ describe('useCommandRegistry', () => {
     expect(findCommand(result.current, 'move-note-to-folder')?.enabled).toBe(false)
   })
 
+  it('exposes duplicate and tab-close commands when handlers are provided', () => {
+    const onDuplicateNote = vi.fn()
+    const onCloseOtherTabs = vi.fn()
+    const onCloseAllTabs = vi.fn()
+    const { result, rerender } = renderHook(
+      (props) => useCommandRegistry(props),
+      {
+        initialProps: makeConfig({
+          onDuplicateNote,
+          onCloseOtherTabs,
+          onCloseAllTabs,
+          canCloseOtherTabs: true,
+          canCloseAllTabs: true,
+        }),
+      },
+    )
+
+    expect(findCommand(result.current, 'duplicate-note')?.enabled).toBe(true)
+    findCommand(result.current, 'duplicate-note')!.execute()
+    expect(onDuplicateNote).toHaveBeenCalledOnce()
+
+    expect(findCommand(result.current, 'close-other-tabs')?.enabled).toBe(true)
+    findCommand(result.current, 'close-other-tabs')!.execute()
+    expect(onCloseOtherTabs).toHaveBeenCalledOnce()
+
+    expect(findCommand(result.current, 'close-all-tabs')?.enabled).toBe(true)
+    findCommand(result.current, 'close-all-tabs')!.execute()
+    expect(onCloseAllTabs).toHaveBeenCalledOnce()
+
+    rerender(makeConfig({
+      onDuplicateNote,
+      onCloseOtherTabs,
+      onCloseAllTabs,
+      canCloseOtherTabs: false,
+      canCloseAllTabs: false,
+    }))
+    expect(findCommand(result.current, 'close-other-tabs')?.enabled).toBe(false)
+    expect(findCommand(result.current, 'close-all-tabs')?.enabled).toBe(false)
+  })
+
   it('includes restore deleted note command when provided', () => {
     const config = makeConfig({ onRestoreDeletedNote: vi.fn(), canRestoreDeletedNote: true })
     const { result } = renderHook(() => useCommandRegistry(config))

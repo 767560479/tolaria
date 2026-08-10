@@ -1015,5 +1015,11 @@
   "locale.idID": "印度尼西亚",
   "locale.ukUA": "乌克兰语",
   "locale.svSE": "瑞典语",
-  "locale.skSK": "斯洛伐克语"
+  "locale.skSK": "斯洛伐克语",
+  "command.note.duplicateNote": "复制笔记",
+  "command.note.closeOtherTabs": "关闭其他标签",
+  "command.note.closeAllTabs": "关闭全部标签",
+  "editor.tabs.closeUnsavedTitle": "丢弃未保存的编辑？",
+  "editor.tabs.closeUnsavedMessage": "有 {count} 个已打开笔记含未保存编辑。关闭将丢弃这些更改。",
+  "editor.tabs.closeUnsavedConfirm": "丢弃并关闭"
 }

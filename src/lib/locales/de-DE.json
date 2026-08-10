@@ -1015,5 +1015,11 @@
   "locale.idID": "Indonesisch",
   "locale.ukUA": "Ukrainisch",
   "locale.svSE": "Schwedisch",
-  "locale.skSK": "Slowakisch"
+  "locale.skSK": "Slowakisch",
+  "command.note.duplicateNote": "Notiz duplizieren",
+  "command.note.closeOtherTabs": "Andere Tabs schließen",
+  "command.note.closeAllTabs": "Alle Tabs schließen",
+  "editor.tabs.closeUnsavedTitle": "Ungespeicherte Änderungen verwerfen?",
+  "editor.tabs.closeUnsavedMessage": "{count} geöffnete Notiz(en) haben ungespeicherte Änderungen. Schließen verwirft diese Änderungen.",
+  "editor.tabs.closeUnsavedConfirm": "Verwerfen und schließen"
 }

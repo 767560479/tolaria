@@ -108,6 +108,11 @@ interface AppCommandsConfig {
   onChangeNoteType?: () => void
   onMoveNoteToFolder?: () => void
   canMoveNoteToFolder?: boolean
+  onDuplicateNote?: () => void
+  onCloseOtherTabs?: () => void
+  onCloseAllTabs?: () => void
+  canCloseOtherTabs?: boolean
+  canCloseAllTabs?: boolean
   onTurnCurrentBlockInto?: (target: RichEditorBlockTypeDefinition) => void
   activeNoteHasIcon?: boolean
   noteListFilter?: NoteListFilter
@@ -238,6 +243,11 @@ type CommandRegistryNoteActions = Pick<
   | 'onChangeNoteType'
   | 'onMoveNoteToFolder'
   | 'canMoveNoteToFolder'
+  | 'onDuplicateNote'
+  | 'onCloseOtherTabs'
+  | 'onCloseAllTabs'
+  | 'canCloseOtherTabs'
+  | 'canCloseAllTabs'
   | 'onTurnCurrentBlockInto'
   | 'activeNoteHasIcon'
   | 'noteListFilter'
@@ -553,6 +563,11 @@ function createCommandRegistryNoteConfig(
     onChangeNoteType: config.onChangeNoteType,
     onMoveNoteToFolder: config.onMoveNoteToFolder,
     canMoveNoteToFolder: config.canMoveNoteToFolder,
+    onDuplicateNote: config.onDuplicateNote,
+    onCloseOtherTabs: config.onCloseOtherTabs,
+    onCloseAllTabs: config.onCloseAllTabs,
+    canCloseOtherTabs: config.canCloseOtherTabs,
+    canCloseAllTabs: config.canCloseAllTabs,
     activeNoteHasIcon: config.activeNoteHasIcon,
     noteListFilter: config.noteListFilter,
     onSetNoteListFilter: config.onSetNoteListFilter,

@@ -1015,5 +1015,11 @@
   "locale.idID": "Indonesian",
   "locale.ukUA": "Ukrainskaja",
   "locale.svSE": "Šviedskaja",
-  "locale.skSK": "Słavackaja"
+  "locale.skSK": "Słavackaja",
+  "command.note.duplicateNote": "Duplicate Note",
+  "command.note.closeOtherTabs": "Close Other Tabs",
+  "command.note.closeAllTabs": "Close All Tabs",
+  "editor.tabs.closeUnsavedTitle": "Discard unsaved edits?",
+  "editor.tabs.closeUnsavedMessage": "{count} open note(s) have unsaved edits. Closing will discard those changes.",
+  "editor.tabs.closeUnsavedConfirm": "Discard and close"
 }

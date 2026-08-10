@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import {
   createFixtureVaultCopy,
   openFixtureVaultDesktopHarness,
@@ -13,6 +13,13 @@ let tempVaultDir: string
 function untitledNotesInProject(): string[] {
   const projectDir = path.join(tempVaultDir, 'project')
   return fs.readdirSync(projectDir).filter((name) => /^untitled-note-\d+(?:-\d+)?\.md$/.test(name))
+}
+
+async function expectEditorFocused(page: Page): Promise<void> {
+  await expect.poll(async () => page.evaluate(() => {
+    const active = document.activeElement as HTMLElement | null
+    return Boolean(active?.isContentEditable || active?.closest('[contenteditable="true"]'))
+  }), { timeout: 5_000 }).toBe(true)
 }
 
 test.beforeEach(async ({ page }) => {
@@ -32,6 +39,13 @@ test('creates new notes inside the targeted folder @smoke', async ({ page }) => 
   await page.getByTestId('create-note-in-folder-menu-item').click()
 
   await expect.poll(untitledNotesInProject, { timeout: 5_000 }).toHaveLength(1)
+  await expect(page.locator('.bn-editor')).toBeVisible({ timeout: 5_000 })
+  // Focus must land from the create path — do not click the editor first.
+  await expectEditorFocused(page)
+
+  const typedTitle = `Folder create ${Date.now()}`
+  await page.keyboard.type(typedTitle)
+  await expect(page.getByRole('textbox').last()).toContainText(typedTitle, { timeout: 5_000 })
 
   await page.getByTestId('folder-row:project').click()
   await openCommandPalette(page)

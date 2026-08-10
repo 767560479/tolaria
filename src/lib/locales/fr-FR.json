@@ -1015,5 +1015,11 @@
   "locale.idID": "Indonésien",
   "locale.ukUA": "Ukrainien",
   "locale.svSE": "Suédois",
-  "locale.skSK": "Slovaque"
+  "locale.skSK": "Slovaque",
+  "command.note.duplicateNote": "Dupliquer la note",
+  "command.note.closeOtherTabs": "Fermer les autres onglets",
+  "command.note.closeAllTabs": "Fermer tous les onglets",
+  "editor.tabs.closeUnsavedTitle": "Abandonner les modifications non enregistrées ?",
+  "editor.tabs.closeUnsavedMessage": "{count} note(s) ouverte(s) ont des modifications non enregistrées. Les fermer abandonnera ces changements.",
+  "editor.tabs.closeUnsavedConfirm": "Abandonner et fermer"
 }
