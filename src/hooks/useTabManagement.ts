@@ -403,9 +403,10 @@ function reopenAlreadyViewingEntry({
   activeTabPathRef,
   setActiveTabPath,
 }: Pick<NavigateToEntryOptions, 'entry' | 'tabsRef' | 'activeTabPathRef' | 'setActiveTabPath'>): boolean {
-  const alreadyOpen = tabsRef.current.some((tab) => notePathsMatch(tab.entry.path, entry.path))
-  if (!alreadyOpen) return false
-  syncActiveTabPath(activeTabPathRef, setActiveTabPath, entry.path)
+  const openTab = tabsRef.current.find((tab) => notePathsMatch(tab.entry.path, entry.path))
+  if (!openTab) return false
+  // Keep the canonical tab path so Editor lookups that use === still resolve content.
+  syncActiveTabPath(activeTabPathRef, setActiveTabPath, openTab.entry.path)
   finishNoteOpenTrace(entry.path)
   return true
 }

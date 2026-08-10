@@ -216,6 +216,19 @@ describe('useTabManagement (single-note model)', () => {
       expectSingleActiveTab(result, '/vault/note/a.md')
     })
 
+    it('re-focuses an open tab using the tab path when the sidebar path only matches by identity', async () => {
+      const { result } = renderHook(() => useTabManagement())
+      await selectNote(result, { path: 'C:\\vault\\note\\a.md' })
+      expectSingleActiveTab(result, 'C:\\vault\\note\\a.md')
+
+      await selectNote(result, { path: 'C:/vault/note/a.md', title: 'A from tree' })
+
+      expect(result.current.tabs).toHaveLength(1)
+      expect(result.current.tabs[0].entry.path).toBe('C:\\vault\\note\\a.md')
+      expect(result.current.activeTabPath).toBe('C:\\vault\\note\\a.md')
+      expect(mockInvoke).toHaveBeenCalledTimes(1)
+    })
+
     it('normalizes partially hydrated note metadata before opening after reload churn', async () => {
       const partialEntry = {
         path: '/vault/note/apple-mail.md',

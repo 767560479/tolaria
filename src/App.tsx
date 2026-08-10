@@ -1288,9 +1288,10 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     setToastMessage,
     onOpenEntry: notes.handleSelectNote,
   })
+  const openMoveNoteToFolderDialogFor = noteRetargetingUi.openMoveNoteToFolderDialogFor
   const handleMoveNoteEntryToFolder = useCallback((entry: VaultEntry) => {
-    noteRetargetingUi.openMoveNoteToFolderDialogFor(entry.path)
-  }, [noteRetargetingUi])
+    openMoveNoteToFolderDialogFor(entry.path)
+  }, [openMoveNoteToFolderDialogFor])
 
   const canToggleRichEditor = !!activeCommandEntry
     && entrySupportsPreviewSourceToggle(activeCommandEntry)

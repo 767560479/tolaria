@@ -154,6 +154,9 @@ class BlockNoteRenderRecoveryBoundary extends Component<{
   }
 
   static getDerivedStateFromError(error: unknown): Partial<BlockNoteRenderRecoveryState> {
+    // Mark before React invokes createRoot.onCaughtError (render phase), so the
+    // fatal overlay does not appear when production stacks omit component names.
+    markRecoveredBlockNoteRenderError(error)
     return { error }
   }
 
@@ -163,7 +166,6 @@ class BlockNoteRenderRecoveryBoundary extends Component<{
     if (this.state.retries >= MAX_BLOCKNOTE_RENDER_RECOVERY_RETRIES) return
 
     const attempt = this.state.retries + 1
-    markRecoveredBlockNoteRenderError(error)
     trackEvent('editor_render_recovered', { reason, attempt })
     this.props.onRecover?.(attempt, reason)
     this.setState(({ recoveryKey, retries }) => ({

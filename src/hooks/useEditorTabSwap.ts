@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type MutableRefObject } from 'react'
 import type { useCreateBlockNote } from '@blocknote/react'
 import type { VaultEntry } from '../types'
+import { notePathsMatch } from '../utils/notePathIdentity'
 import { compactMarkdown } from '../utils/compact-markdown'
 import {
   failNoteOpenTrace,
@@ -142,7 +143,7 @@ function findActiveTab(options: {
 }): Tab | undefined {
   const { tabs, activeTabPath } = options
   return activeTabPath
-    ? tabs.find(tab => tab.entry.path === activeTabPath)
+    ? tabs.find(tab => notePathsMatch(tab.entry.path, activeTabPath))
     : undefined
 }
 

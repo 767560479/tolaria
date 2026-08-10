@@ -28,6 +28,7 @@ import { EditorContent } from './EditorContent'
 import { EditorMemoryProbe } from './EditorMemoryProbe'
 import { EditorTabBar } from './EditorTabBar'
 import { FilePreview } from './FilePreview'
+import { notePathsMatch } from '../utils/notePathIdentity'
 import { schema } from './editorSchema'
 import { useRightPanelExclusion } from './useRightPanelExclusion'
 import type { RawEditorFindRequest } from './RawEditorFindBar'
@@ -322,7 +323,7 @@ function useEditorSetup({
     installRichEditorDispatchPerformanceProbe(editor, () => activeTabPathRef.current)
   }, [editor])
   useFilenameAutolinkGuard(editor)
-  const activeTab = tabs.find((t) => t.entry.path === activeTabPath) ?? null
+  const activeTab = tabs.find((t) => notePathsMatch(t.entry.path, activeTabPath)) ?? null
   const {
     rawMode,
     handleToggleRaw,

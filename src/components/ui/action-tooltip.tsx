@@ -32,12 +32,10 @@ interface ActionTooltipBoundaryState {
 class ActionTooltipBoundary extends Component<ActionTooltipBoundaryProps, ActionTooltipBoundaryState> {
   state: ActionTooltipBoundaryState = { failed: false }
 
-  static getDerivedStateFromError(): ActionTooltipBoundaryState {
-    return { failed: true }
-  }
-
-  componentDidCatch(error: unknown) {
+  static getDerivedStateFromError(error: unknown): ActionTooltipBoundaryState {
+    // Mark before createRoot.onCaughtError so production minified stacks still suppress.
     markRecoveredActionTooltipError(error)
+    return { failed: true }
   }
 
   render() {

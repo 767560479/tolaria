@@ -226,6 +226,20 @@ describe('main entrypoint', () => {
     expect(document.getElementById('tolaria-fatal-render-error')).toBeNull()
   }, MAIN_ENTRYPOINT_IMPORT_TIMEOUT_MS)
 
+  it('suppresses marked minified #185 errors when production stacks omit BlockNote frames', async () => {
+    await importEntrypoint()
+
+    const { markRecoveredBlockNoteRenderError } = await import('./components/blockNoteRenderRecovery')
+    const error = new Error('Minified React error #185; visit https://react.dev/errors/185')
+    window.__tolariaFrontendReady = true
+    markRecoveredBlockNoteRenderError(error)
+
+    rootOptions().onCaughtError?.(error, { componentStack: '' })
+
+    expect(mocks.sentryHandler).not.toHaveBeenCalled()
+    expect(document.getElementById('tolaria-fatal-render-error')).toBeNull()
+  }, MAIN_ENTRYPOINT_IMPORT_TIMEOUT_MS)
+
   it('normalizes missing React component stacks before handing errors to Sentry', async () => {
     await importEntrypoint()
 

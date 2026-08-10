@@ -108,4 +108,12 @@ describe('blockNoteRenderRecovery', () => {
       'react_update_depth_exceeded',
     )
   })
+
+  it('treats marked minified #185 errors as recovered without a component stack', () => {
+    const error = new Error('Minified React error #185; visit https://react.dev/errors/185')
+
+    expect(isRecoveredBlockNoteRenderError(error, '')).toBe(false)
+    markRecoveredBlockNoteRenderError(error)
+    expect(isRecoveredBlockNoteRenderError(error, '')).toBe(true)
+  })
 })
