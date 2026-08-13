@@ -3,6 +3,7 @@ import type { SetStateAction } from 'react'
 import { useSaveNote } from './useSaveNote'
 import { createTranslator, type AppLocale } from '../lib/i18n'
 import { canWritePathToVault } from '../utils/vaultPathContainment'
+import { notePathsMatch } from '../utils/notePathIdentity'
 
 interface Tab {
   entry: { path: string }
@@ -134,7 +135,10 @@ function matchesPendingPath(
 ): pending is PendingContent {
   if (!pending) return false
   if (!pathFilter) return true
-  return resolveBufferedPath(pending.path, resolvePath) === resolveBufferedPath(pathFilter, resolvePath)
+  return notePathsMatch(
+    resolveBufferedPath(pending.path, resolvePath),
+    resolveBufferedPath(pathFilter, resolvePath),
+  )
 }
 
 function matchesPendingContent(
@@ -198,7 +202,7 @@ function applyTabContent(
   setTabs((prev: Tab[]) => {
     let changed = false
     const next = prev.map((t) => {
-      if (t.entry.path !== path) return t
+      if (!notePathsMatch(t.entry.path, path)) return t
       if (t.content === content) return t
       changed = true
       return { ...t, content }

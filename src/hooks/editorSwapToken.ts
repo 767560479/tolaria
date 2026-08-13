@@ -1,4 +1,5 @@
 import type { MutableRefObject } from 'react'
+import { notePathsMatch } from '../utils/notePathIdentity'
 
 export interface SwapToken {
   seq: number
@@ -34,7 +35,7 @@ function activeTabMatchesSwapToken<Tab extends SwapTab>(options: {
   token: SwapToken
 }): boolean {
   const { tabsRef, token } = options
-  const activeTab = tabsRef.current.find(tab => tab.entry.path === token.path)
+  const activeTab = tabsRef.current.find(tab => notePathsMatch(tab.entry.path, token.path))
   return activeTab?.content === token.content
 }
 
@@ -52,7 +53,7 @@ function isCurrentSwapToken<Tab extends SwapTab>(options: {
   } = options
 
   return swapSeqRef.current === token.seq
-    && prevActivePathRef.current === token.path
+    && notePathsMatch(prevActivePathRef.current, token.path)
     && activeTabMatchesSwapToken({ tabsRef, token })
 }
 

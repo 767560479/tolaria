@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import type React from 'react'
 import { noteDisplaysAsSheet } from '../utils/noteFormat'
+import { notePathsMatch } from '../utils/notePathIdentity'
 
 type Tab = {
   entry: { path: string; display?: unknown; fileKind?: string | null }
@@ -42,7 +43,7 @@ function useRegisterRichContentFlush({
   sheetFlushRef?: React.MutableRefObject<((path: string) => void) | null>
 }) {
   const flushPendingEditorContent = useCallback((path: string) => {
-    if (!activeTab || activeTab.entry.path !== path) return
+    if (!activeTab || !notePathsMatch(activeTab.entry.path, path)) return
     if (noteDisplaysAsSheet({
       content: activeTab.content,
       display: activeTab.entry.display,
@@ -71,7 +72,7 @@ function useRegisterRawContentFlush({
   flushPendingRawContentRef?: React.MutableRefObject<((path: string) => void) | null>
 }) {
   const flushPendingRawContent = useCallback((path: string) => {
-    if (!rawMode || !activeTab || activeTab.entry.path !== path) return
+    if (!rawMode || !activeTab || !notePathsMatch(activeTab.entry.path, path)) return
 
     const latestContent = rawLatestContentRef.current
     if (latestContent === null || latestContent === activeTab.content) return

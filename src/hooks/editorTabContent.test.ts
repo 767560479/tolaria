@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   extractEditorBody,
   getH1TextFromBlocks,
+  isUntitledPath,
   normalizeParsedImageBlocks,
   replaceTitleInFrontmatter,
   slugifyPathStem,
@@ -208,6 +209,13 @@ describe('normalizeParsedImageBlocks', () => {
         },
       },
     ])
+  })
+})
+
+describe('isUntitledPath', () => {
+  it('detects untitled notes with Windows backslash paths', () => {
+    expect(isUntitledPath(String.raw`D:\vault\notes\untitled-note-1700000000.md`)).toBe(true)
+    expect(isUntitledPath(String.raw`D:\vault\notes/untitled-note-1700000000.md`)).toBe(true)
   })
 })
 

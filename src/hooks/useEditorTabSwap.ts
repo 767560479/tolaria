@@ -2,6 +2,14 @@ import { useCallback, useEffect, useRef, type MutableRefObject } from 'react'
 import type { useCreateBlockNote } from '@blocknote/react'
 import type { VaultEntry } from '../types'
 import { notePathsMatch } from '../utils/notePathIdentity'
+import {
+  cachedTabStateForPath,
+  deleteCachedTabPathsMatching,
+  didActiveNotePathChange,
+  isNotePathIdentityChange,
+  retargetCachedTabPath,
+  tabContentForPath,
+} from './editorTabPathIdentity'
 import { compactMarkdown } from '../utils/compact-markdown'
 import {
   failNoteOpenTrace,
@@ -205,7 +213,7 @@ function activeEditorChangePath(options: {
 }): string | null {
   const { prevActivePathRef, editorContentPathRef } = options
   const path = prevActivePathRef.current
-  if (!path || editorContentPathRef.current !== path) return null
+  if (!path || !notePathsMatch(editorContentPathRef.current, path)) return null
   return path
 }
 
@@ -215,7 +223,27 @@ function previousContentForPath(options: {
   cache: Map<string, CachedTabState>
 }): string | undefined {
   const { path, tabs, cache } = options
-  return tabs.find(t => t.entry.path === path)?.content ?? cache.get(path)?.sourceContent
+  return tabContentForPath(tabs, path) ?? cachedTabStateForPath(cache, path)?.sourceContent
+}
+
+function alignEditorPathIdentity(options: {
+  prevPath: string | null
+  activeTabPath: string | null
+  cache: Map<string, CachedTabState>
+  editorContentPathRef: EditorContentPathRef
+  pendingLocalContentRef: MutableRefObject<PendingLocalContent | null>
+}): void {
+  const { prevPath, activeTabPath, cache, editorContentPathRef, pendingLocalContentRef } = options
+  if (!prevPath || !activeTabPath || !isNotePathIdentityChange(prevPath, activeTabPath)) return
+
+  retargetCachedTabPath(cache, prevPath, activeTabPath)
+  if (notePathsMatch(editorContentPathRef.current, prevPath)) {
+    editorContentPathRef.current = activeTabPath
+  }
+  const pending = pendingLocalContentRef.current
+  if (pending && notePathsMatch(pending.path, prevPath)) {
+    pendingLocalContentRef.current = { ...pending, path: activeTabPath }
+  }
 }
 
 function serializedEditorChange(options: {
@@ -308,7 +336,7 @@ function cachePreviousTabOnPathChange(options: {
 }) {
   const { prevPath, previousTab, pathChanged, editorMountedRef, cache, editor, editorContentPathRef } = options
   if (!prevPath || !previousTab || !pathChanged || !editorMountedRef.current) return
-  if (editorContentPathRef.current !== prevPath) return
+  if (!notePathsMatch(editorContentPathRef.current, prevPath)) return
   cacheEditorState(cache, prevPath, {
     blocks: editor.document,
     scrollTop: readEditorScrollTop(),
@@ -385,7 +413,7 @@ function markRawModeReswapPending(options: {
 }) {
   const { activeTabPath, cache, rawSwapPendingRef } = options
   if (!activeTabPath) return false
-  cache.delete(activeTabPath)
+  deleteCachedTabPathsMatching(cache, activeTabPath)
   rawSwapPendingRef.current = true
   return true
 }
@@ -436,8 +464,8 @@ function cachedActiveTabMatchesEditor(options: {
   editorContentPathRef: EditorContentPathRef
 }) {
   const { activeTabPath, activeTab, cache, editorContentPathRef } = options
-  if (!activeTabPath || !activeTab || editorContentPathRef.current !== activeTabPath) return false
-  return cache.get(activeTabPath)?.sourceContent === activeTab.content
+  if (!activeTabPath || !activeTab || !notePathsMatch(editorContentPathRef.current, activeTabPath)) return false
+  return cachedTabStateForPath(cache, activeTabPath)?.sourceContent === activeTab.content
 }
 
 function cacheStableActiveTabAndClearPending(options: {
@@ -483,7 +511,7 @@ function shouldKeepPendingLocalContent(options: {
   } = options
 
   const pendingLocalContent = pendingLocalContentRef.current
-  if (!activeTabPath || !activeTab || pendingLocalContent?.path !== activeTabPath) return false
+  if (!activeTabPath || !activeTab || !notePathsMatch(pendingLocalContent?.path, activeTabPath)) return false
   return true
 }
 
@@ -576,16 +604,19 @@ function shouldRefreshStableActivePath(options: {
   activeTabPath: string | null
   activeTab: Tab | undefined
   cache: Map<string, CachedTabState>
+  editorContentPathRef: EditorContentPathRef
 }): boolean {
   const {
     activeTabPath,
     activeTab,
     cache,
+    editorContentPathRef,
   } = options
 
   if (!activeTabPath || !activeTab) return false
-  const cachedState = cache.get(activeTabPath)
-  return !cachedState || cachedState.sourceContent !== activeTab.content
+  const cachedState = cachedTabStateForPath(cache, activeTabPath)
+  if (!cachedState) return !notePathsMatch(editorContentPathRef.current, activeTabPath)
+  return cachedState.sourceContent !== activeTab.content
 }
 
 function shouldClearDomSelectionForScheduledSwap(options: {
@@ -596,7 +627,7 @@ function shouldClearDomSelectionForScheduledSwap(options: {
   if (state.pathChanged) return true
   if (!activeTabPath || !state.activeTab) return false
 
-  const cachedState = state.cache.get(activeTabPath)
+  const cachedState = cachedTabStateForPath(state.cache, activeTabPath)
   return !!cachedState && cachedState.sourceContent !== state.activeTab.content
 }
 
@@ -648,7 +679,7 @@ function preserveUntitledRenameState(options: {
   if (!prevPath || !activeTabPath) return false
   if (!isUntitledRenameTransition(prevPath, activeTabPath, activeTab, editor)) return false
 
-  cache.delete(prevPath)
+  deleteCachedTabPathsMatching(cache, prevPath)
   cacheStableActivePath({
     cache,
     activeTabPath,
@@ -701,7 +732,7 @@ function clearStaleSwap(options: {
     prevActivePathRef,
     suppressChangeRef,
   } = options
-  if (prevActivePathRef.current === targetPath) return false
+  if (notePathsMatch(prevActivePathRef.current, targetPath)) return false
   suppressChangeRef.current = false
   return true
 }
@@ -904,7 +935,7 @@ function resolveTabSwapState(options: {
   return {
     cache: tabCacheRef.current,
     prevPath,
-    pathChanged: prevPath !== activeTabPath,
+    pathChanged: didActiveNotePathChange(prevPath, activeTabPath),
     activeTab: findActiveTab({ tabs, activeTabPath }),
     previousTab: findActiveTab({ tabs, activeTabPath: prevPath }),
     rawModeJustEnded,
@@ -988,6 +1019,13 @@ function runTabSwapEffect(options: RunTabSwapEffectOptions) {
 
   const rawModeJustEnded = consumeRawModeTransition(prevRawModeRef, rawMode)
   if (flushBeforeRawMode({ rawMode, flushPendingEditorChange })) return
+  alignEditorPathIdentity({
+    prevPath: prevActivePathRef.current,
+    activeTabPath,
+    cache: tabCacheRef.current,
+    editorContentPathRef,
+    pendingLocalContentRef,
+  })
   const state = resolveTabSwapState({
     tabs,
     activeTabPath,

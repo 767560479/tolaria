@@ -61,4 +61,21 @@ describe('useRegisterEditorContentFlushes', () => {
     expect(flushSheet).not.toHaveBeenCalled()
     expect(flushRichEditor).toHaveBeenCalledTimes(1)
   })
+
+  it('flushes a newly created note when the tab path only matches by identity', () => {
+    const flushRichEditor = vi.fn(() => true)
+    const flushPendingEditorContentRef = renderFlushRegistration({
+      activeTab: {
+        entry: { path: String.raw`D:\vault\notes\untitled-note-1.md`, display: 'text' },
+        content: '---\ntype: Note\n---\n\n# \n\n',
+      },
+      flushPendingEditorChange: flushRichEditor,
+    })
+
+    act(() => {
+      flushPendingEditorContentRef.current?.(String.raw`D:\vault\notes/untitled-note-1.md`)
+    })
+
+    expect(flushRichEditor).toHaveBeenCalledTimes(1)
+  })
 })

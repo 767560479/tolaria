@@ -1121,3 +1121,71 @@ describe('useEditorTabSwap scroll position', () => {
     expect(scrollEl.scrollTop).toBe(0)
   })
 })
+
+describe('useEditorTabSwap newly created note path identity', () => {
+  afterEach(() => {
+    clearParsedNoteBlockCache()
+    vi.restoreAllMocks()
+  })
+
+  it('keeps typed untitled content when vault scan only changes the path string', async () => {
+    const optimisticPath = String.raw`D:\vault\notes/untitled-note-123.md`
+    const scannedPath = String.raw`D:\vault\notes\untitled-note-123.md`
+    const untitledTab = makeUntitledTab(optimisticPath)
+    const scannedTab = {
+      ...untitledTab,
+      entry: { ...untitledTab.entry, path: scannedPath },
+    }
+    const typedBlocks = [
+      {
+        type: 'heading',
+        props: { level: 1 },
+        content: [{ type: 'text', text: 'Kept title', styles: {} }],
+        children: [],
+      },
+      makeTextParagraphBlock('Typed before vault scan'),
+    ]
+
+    const { docRef, mockEditor, rerenderWith } = await createSwapHarness({
+      initialProps: { tabs: [untitledTab], activeTabPath: optimisticPath },
+    })
+    docRef.current = typedBlocks
+    mockEditor.replaceBlocks.mockClear()
+    mockEditor.tryParseMarkdownToBlocks.mockClear()
+
+    await rerenderWith({ tabs: [scannedTab], activeTabPath: scannedPath })
+
+    expect(mockEditor.tryParseMarkdownToBlocks).not.toHaveBeenCalled()
+    expect(mockEditor.replaceBlocks).not.toHaveBeenCalled()
+    expect(docRef.current).toBe(typedBlocks)
+  })
+
+  it('still flushes typed content after the created-note path string is canonicalized', async () => {
+    const optimisticPath = String.raw`D:\vault\notes/untitled-note-123.md`
+    const scannedPath = String.raw`D:\vault\notes\untitled-note-123.md`
+    const untitledTab = makeUntitledTab(optimisticPath)
+    const scannedTab = {
+      ...untitledTab,
+      entry: { ...untitledTab.entry, path: scannedPath },
+    }
+    const onContentChange = vi.fn()
+
+    const { mockEditor, result, rerenderWith } = await createSwapHarness({
+      initialProps: { tabs: [untitledTab], activeTabPath: optimisticPath },
+      onContentChange,
+    })
+    mockEditor.blocksToMarkdownLossy.mockReturnValue('# Kept title\n\nTyped body')
+    await rerenderWith({ tabs: [scannedTab], activeTabPath: scannedPath })
+    onContentChange.mockClear()
+
+    act(() => {
+      result.current.handleEditorChange()
+      result.current.flushPendingEditorChange()
+    })
+
+    expect(onContentChange).toHaveBeenCalledWith(
+      scannedPath,
+      expect.stringContaining('Kept title'),
+    )
+  })
+})

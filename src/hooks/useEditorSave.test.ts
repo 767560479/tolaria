@@ -308,6 +308,22 @@ describe('useEditorSave', () => {
     expect(updated[0].content).toBe('---\ntitle: T\n---\n\n# T\n\nLive edits')
   })
 
+  it('syncs content onto a tab whose path only matches by identity', () => {
+    const { result } = renderSaveHook()
+    const scannedPath = String.raw`D:\vault\notes\untitled-note-1.md`
+    const optimisticPath = String.raw`D:\vault\notes/untitled-note-1.md`
+
+    act(() => {
+      result.current.handleContentChange(optimisticPath, '---\ntype: Note\n---\n\n# Typed title\n')
+    })
+
+    const updater = setTabs.mock.calls[0][0]
+    const tabs = [{ entry: { path: scannedPath }, content: '---\ntype: Note\n---\n\n# \n\n' }]
+    const updated = updater(tabs)
+    expect(updated[0].content).toBe('---\ntype: Note\n---\n\n# Typed title\n')
+    expect(updated[0].entry.path).toBe(scannedPath)
+  })
+
   it('does not replace current tab state again when saving content already synced from editor changes', async () => {
     const { result } = renderSaveHook()
     const path = '/test/note.md'

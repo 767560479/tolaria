@@ -98,8 +98,10 @@ function findUnsavedFallback({
   activeTabPath: string | null
   unsavedPaths: Set<string>
 }): { path: string; content: string } | undefined {
-  const activeTab = tabs.find(t => t.entry.path === activeTabPath)
-  if (!activeTab || !unsavedPaths.has(activeTab.entry.path)) return undefined
+  const activeTab = tabs.find(t => notePathsMatch(t.entry.path, activeTabPath))
+  if (!activeTab) return undefined
+  const isUnsaved = [...unsavedPaths].some((path) => notePathsMatch(path, activeTab.entry.path))
+  if (!isUnsaved) return undefined
   return { path: activeTab.entry.path, content: activeTab.content }
 }
 
@@ -207,20 +209,20 @@ async function reloadAutoRenamedNote(
   },
 ): Promise<void> {
   const newEntry = await invoke<VaultEntry>('reload_vault_entry', { path: newPath })
-  const preservedContent = tabsRef.current.find((tab) => tab.entry.path === oldPath)?.content
+  const preservedContent = tabsRef.current.find((tab) => notePathsMatch(tab.entry.path, oldPath))?.content
     ?? await invoke<string>('get_note_content', { path: newPath })
 
   const otherTabPaths = tabsRef.current
-    .filter((tab) => tab.entry.path !== oldPath && tab.entry.path !== newPath)
+    .filter((tab) => !notePathsMatch(tab.entry.path, oldPath) && !notePathsMatch(tab.entry.path, newPath))
     .map((tab) => tab.entry.path)
 
   startTransition(() => {
     setTabs((prev: TabState[]) => prev.map((tab) => (
-      tab.entry.path === oldPath
+      notePathsMatch(tab.entry.path, oldPath)
         ? { entry: { ...tab.entry, ...newEntry, path: newPath }, content: preservedContent }
         : tab
     )))
-    if (activeTabPathRef.current === oldPath) handleSwitchTab(newPath)
+    if (notePathsMatch(activeTabPathRef.current, oldPath)) handleSwitchTab(newPath)
     replaceEntry(oldPath, { ...newEntry, path: newPath }, preservedContent)
   })
 
@@ -562,7 +564,7 @@ function useFlushBeforeAction({
     try {
       await flushEditorContent(currentPath, {
         savePendingForPath,
-        getTabContent: (p) => tabsRef.current.find(t => t.entry.path === p)?.content,
+        getTabContent: (p) => tabsRef.current.find(t => notePathsMatch(t.entry.path, p))?.content,
         isUnsaved: (p) => unsavedPathsRef.current.has(p),
         onSaved: (p) => { clearUnsaved(p) },
       })

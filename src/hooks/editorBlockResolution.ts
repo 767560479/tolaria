@@ -1,6 +1,7 @@
 import type { useCreateBlockNote } from '@blocknote/react'
 import { repairMalformedEditorBlocks } from './editorBlockRepair'
 import { inferCodeBlockLanguages } from '../utils/codeBlockLanguage'
+import { notePathsMatch } from '../utils/notePathIdentity'
 import {
   blankParagraphBlocks,
   extractEditorBody,
@@ -88,7 +89,9 @@ export function cacheEditorState(
   path: NotePath,
   nextState: CachedTabState,
 ) {
-  if (cache.has(path)) cache.delete(path)
+  for (const existingPath of [...cache.keys()]) {
+    if (notePathsMatch(existingPath, path)) cache.delete(existingPath)
+  }
   cache.set(path, nextState)
   while (cache.size > TAB_STATE_CACHE_LIMIT) {
     const oldestPath = cache.keys().next().value
