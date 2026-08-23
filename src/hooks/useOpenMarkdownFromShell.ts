@@ -18,6 +18,7 @@ import {
   type ShellMarkdownOpenError,
   type ShellMarkdownOpenPayload,
 } from '../utils/openMarkdownFromShell'
+import { normalizeVaultEntry } from '../utils/vaultMetadataNormalization'
 import { cleanupTauriEventListener, type TauriUnlisten } from '../utils/tauriEventCleanup'
 
 interface ShellOpenVault {
@@ -63,12 +64,12 @@ function shellVaultPathsMatch(left: string, right: string): boolean {
 }
 
 function shellMarkdownVaultEntry(request: ShellMarkdownNavigation): VaultEntry {
-  return {
+  return normalizeVaultEntry({
     path: request.markdownPath,
+    filename: request.relativeNote,
     title: shellMarkdownNoteTitle(request.relativeNote),
-    modifiedAt: new Date().toISOString(),
     fileKind: 'markdown',
-  } as VaultEntry
+  }, request.vaultPath)
 }
 
 function findEntryForShellOpen(

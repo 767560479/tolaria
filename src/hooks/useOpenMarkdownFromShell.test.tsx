@@ -161,12 +161,12 @@ describe('useOpenMarkdownFromShell', () => {
       }),
     }))
 
-    await waitFor(() => expect(onSelectNote).toHaveBeenCalledWith({
+    await waitFor(() => expect(onSelectNote).toHaveBeenCalledWith(expect.objectContaining({
       path: '/Notes/meeting.md',
       title: 'meeting',
-      modifiedAt: expect.any(String),
+      filename: 'meeting.md',
       fileKind: 'markdown',
-    }))
+    })))
     expect(reloadVault).toHaveBeenCalled()
   })
 
