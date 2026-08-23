@@ -3,6 +3,7 @@ import { useMemo, useRef } from 'react'
 import type { useCreateBlockNote } from '@blocknote/react'
 import type { AppLocale } from '../../lib/i18n'
 import type { NoteWidthMode, NoteStatus, VaultEntry } from '../../types'
+import { findByNotePath } from '../../utils/notePathIdentity'
 import { useEditorTheme } from '../../hooks/useTheme'
 import { deriveEditorContentState } from './editorContentState'
 import type { RawEditorFindRequest } from '../RawEditorFindBar'
@@ -94,7 +95,7 @@ export function useEditorContentModel(props: EditorContentProps) {
   }), [activeTab, entries, props.activeStatus, rawMode])
   const showEditor = !diffMode && showContentEditor
   const loadingEntry = !activeTab && activeTabPath
-    ? entries.find((entry) => entry.path === activeTabPath) ?? null
+    ? findByNotePath(entries, activeTabPath) ?? null
     : null
   const loadingTab = loadingEntry ? { entry: loadingEntry, content: '' } : null
 

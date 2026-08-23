@@ -30,6 +30,7 @@ describe('openMarkdownFromShell', () => {
     })).toEqual({
       vaultPath: 'D:/Notes',
       relativeNote: 'meeting.md',
+      markdownPath: 'D:/Notes/meeting.md',
     })
     expect(shellMarkdownVaultLabel('D:/Notes')).toBe('Notes')
     expect(shellMarkdownVaultLabel('D:\\Notes')).toBe('Notes')

@@ -15,6 +15,7 @@ export type ShellMarkdownOpenError =
   | 'open_failed'
 
 export interface ShellMarkdownNavigation {
+  markdownPath: string
   relativeNote: string
   vaultPath: string
 }
@@ -35,12 +36,18 @@ export function shellMarkdownVaultLabel(vaultPath: string): string {
   return segments.at(-1) || 'Local Vault'
 }
 
+export function shellMarkdownNoteTitle(relativeNote: string): string {
+  const stem = relativeNote.replace(/\.md$/iu, '')
+  return stem || relativeNote
+}
+
 export function normalizeShellMarkdownNavigation(
   payload: ShellMarkdownOpenPayload,
 ): ShellMarkdownNavigation | null {
+  const markdownPath = normalizeNotePathSeparators(payload.markdownPath).replace(/\/+$/u, '')
   const vaultPath = normalizeNotePathSeparators(payload.vaultPath).replace(/\/+$/u, '')
   const relativeNote = normalizeNotePathSeparators(payload.relativeNote).replace(/^\/+/u, '')
-  if (!vaultPath || !relativeNote || relativeNote.includes('/')) return null
+  if (!markdownPath || !vaultPath || !relativeNote || relativeNote.includes('/')) return null
   if (!relativeNote.toLocaleLowerCase().endsWith('.md')) return null
-  return { vaultPath, relativeNote }
+  return { markdownPath, vaultPath, relativeNote }
 }

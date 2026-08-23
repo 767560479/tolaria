@@ -7,11 +7,12 @@ import { trackEvent } from '../lib/telemetry'
 import { isTauri } from '../mock-tauri'
 import type { VaultEntry } from '../types'
 import { relativePathForVaultItem } from '../utils/deepLinks'
-import { notePathsMatch } from '../utils/notePathIdentity'
+import { notePathsCollide, notePathsMatch } from '../utils/notePathIdentity'
 import {
   isShellMarkdownOpenPayload,
   normalizeShellMarkdownNavigation,
   SHELL_OPEN_MARKDOWN_EVENT,
+  shellMarkdownNoteTitle,
   shellMarkdownVaultLabel,
   type ShellMarkdownNavigation,
   type ShellMarkdownOpenError,
@@ -27,7 +28,6 @@ interface UseOpenMarkdownFromShellConfig {
   currentVaultPath: string
   enabled: boolean
   entries: VaultEntry[]
-  isVaultContentLoading: boolean
   locale?: AppLocale
   onSelectNote: (entry: VaultEntry) => Promise<void> | void
   registerVault: (path: string, label: string) => Promise<void> | void
@@ -55,7 +55,20 @@ function errorDetail(error: unknown): string {
 }
 
 function navigationKey(request: ShellMarkdownNavigation): string {
-  return `${request.vaultPath}\n${request.relativeNote}`
+  return `${request.vaultPath}\n${request.markdownPath}`
+}
+
+function shellVaultPathsMatch(left: string, right: string): boolean {
+  return notePathsMatch(left, right) || notePathsCollide(left, right)
+}
+
+function shellMarkdownVaultEntry(request: ShellMarkdownNavigation): VaultEntry {
+  return {
+    path: request.markdownPath,
+    title: shellMarkdownNoteTitle(request.relativeNote),
+    modifiedAt: new Date().toISOString(),
+    fileKind: 'markdown',
+  } as VaultEntry
 }
 
 function findEntryForShellOpen(
@@ -79,16 +92,11 @@ async function selectShellOpenEntry({
   request: ShellMarkdownNavigation
   reloadVault: () => Promise<VaultEntry[]>
 }): Promise<boolean> {
-  const existingEntry = findEntryForShellOpen(entries, request)
-  if (existingEntry) {
-    await onSelectNote(existingEntry)
-    return true
-  }
-
-  const freshEntries = await reloadVault()
-  const freshEntry = findEntryForShellOpen(freshEntries, request)
-  if (!freshEntry) return false
-  await onSelectNote(freshEntry)
+  const indexedEntry = findEntryForShellOpen(entries, request)
+  await onSelectNote(indexedEntry ?? shellMarkdownVaultEntry(request))
+  void reloadVault().catch((error) => {
+    console.warn('[shell-open-markdown] Background vault refresh after shell open failed:', error)
+  })
   return true
 }
 
@@ -170,11 +178,11 @@ function useShellMarkdownResolver({
       return
     }
 
-    const alreadyRegistered = vaults.some((vault) => notePathsMatch(vault.path, navigation.vaultPath))
+    const alreadyRegistered = vaults.some((vault) => shellVaultPathsMatch(vault.path, navigation.vaultPath))
     const run = async () => {
       if (!alreadyRegistered) {
         await registerVault(navigation.vaultPath, shellMarkdownVaultLabel(navigation.vaultPath))
-      } else if (!notePathsMatch(currentVaultPath, navigation.vaultPath)) {
+      } else if (!shellVaultPathsMatch(currentVaultPath, navigation.vaultPath)) {
         switchVault(navigation.vaultPath)
       }
       setPendingNavigation(navigation)
@@ -211,7 +219,6 @@ function useShellMarkdownNavigation({
   currentVaultPath,
   enabled,
   entries,
-  isVaultContentLoading,
   locale,
   onSelectNote,
   pendingNavigation,
@@ -222,7 +229,6 @@ function useShellMarkdownNavigation({
   currentVaultPath: string
   enabled: boolean
   entries: VaultEntry[]
-  isVaultContentLoading: boolean
   locale: AppLocale
   onSelectNote: (entry: VaultEntry) => Promise<void> | void
   pendingNavigation: ShellMarkdownNavigation | null
@@ -233,8 +239,8 @@ function useShellMarkdownNavigation({
   const activeAttemptRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!enabled || !pendingNavigation || isVaultContentLoading) return
-    if (!notePathsMatch(currentVaultPath, pendingNavigation.vaultPath)) return
+    if (!enabled || !pendingNavigation) return
+    if (!shellVaultPathsMatch(currentVaultPath, pendingNavigation.vaultPath)) return
 
     const key = navigationKey(pendingNavigation)
     if (activeAttemptRef.current === key) return
@@ -263,7 +269,6 @@ function useShellMarkdownNavigation({
     currentVaultPath,
     enabled,
     entries,
-    isVaultContentLoading,
     locale,
     onSelectNote,
     pendingNavigation,
@@ -277,7 +282,6 @@ export function useOpenMarkdownFromShell({
   currentVaultPath,
   enabled,
   entries,
-  isVaultContentLoading,
   locale = 'en',
   onSelectNote,
   registerVault,
@@ -319,7 +323,6 @@ export function useOpenMarkdownFromShell({
     currentVaultPath,
     enabled,
     entries,
-    isVaultContentLoading,
     locale,
     onSelectNote,
     pendingNavigation,

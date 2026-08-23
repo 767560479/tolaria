@@ -1521,7 +1521,6 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     currentVaultPath: resolvedPath,
     enabled: !noteWindowParams && !aiWorkspaceWindow,
     entries: visibleEntries,
-    isVaultContentLoading,
     locale: appLocale,
     onSelectNote: notes.handleSelectNote,
     registerVault: registerVaultSelection,

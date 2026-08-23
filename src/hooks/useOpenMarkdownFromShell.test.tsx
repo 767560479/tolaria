@@ -34,6 +34,22 @@ function entry(path: string): VaultEntry {
   } as VaultEntry
 }
 
+function shellHookProps(overrides: Partial<Parameters<typeof useOpenMarkdownFromShell>[0]> = {}) {
+  return {
+    currentVaultPath: '/Notes',
+    enabled: true,
+    entries: [] as VaultEntry[],
+    onSelectNote: vi.fn(),
+    registerVault: vi.fn().mockResolvedValue(undefined),
+    reloadVault: vi.fn().mockResolvedValue([]),
+    setToastMessage: vi.fn(),
+    switchVault: vi.fn(),
+    vaultListLoaded: true,
+    vaults: [{ path: '/Notes' }],
+    ...overrides,
+  }
+}
+
 describe('useOpenMarkdownFromShell', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -55,24 +71,21 @@ describe('useOpenMarkdownFromShell', () => {
     })
 
     const { rerender } = renderHook(
-      ({ entries, currentVaultPath, isVaultContentLoading }) => useOpenMarkdownFromShell({
-        currentVaultPath,
-        enabled: true,
-        entries,
-        isVaultContentLoading,
-        onSelectNote,
-        registerVault,
-        reloadVault: vi.fn().mockResolvedValue([note]),
-        setToastMessage: vi.fn(),
-        switchVault,
-        vaultListLoaded: true,
-        vaults: [],
+      ({ entries, currentVaultPath }) => useOpenMarkdownFromShell({
+        ...shellHookProps({
+          currentVaultPath,
+          entries,
+          onSelectNote,
+          registerVault,
+          switchVault,
+          vaults: [],
+          reloadVault: vi.fn().mockResolvedValue([note]),
+        }),
       }),
       {
         initialProps: {
           currentVaultPath: '/old',
           entries: [] as VaultEntry[],
-          isVaultContentLoading: true,
         },
       },
     )
@@ -83,7 +96,6 @@ describe('useOpenMarkdownFromShell', () => {
       rerender({
         currentVaultPath: '/Notes',
         entries: [note],
-        isVaultContentLoading: false,
       })
     })
 
@@ -103,24 +115,19 @@ describe('useOpenMarkdownFromShell', () => {
     })
 
     const { rerender } = renderHook(
-      ({ currentVaultPath, isVaultContentLoading, entries }) => useOpenMarkdownFromShell({
-        currentVaultPath,
-        enabled: true,
-        entries,
-        isVaultContentLoading,
-        onSelectNote: vi.fn(),
-        registerVault,
-        reloadVault: vi.fn().mockResolvedValue([note]),
-        setToastMessage: vi.fn(),
-        switchVault,
-        vaultListLoaded: true,
-        vaults: [{ path: '/Notes' }],
+      ({ currentVaultPath, entries }) => useOpenMarkdownFromShell({
+        ...shellHookProps({
+          currentVaultPath,
+          entries,
+          registerVault,
+          switchVault,
+          reloadVault: vi.fn().mockResolvedValue([note]),
+        }),
       }),
       {
         initialProps: {
           currentVaultPath: '/other',
           entries: [] as VaultEntry[],
-          isVaultContentLoading: true,
         },
       },
     )
@@ -132,45 +139,54 @@ describe('useOpenMarkdownFromShell', () => {
       rerender({
         currentVaultPath: '/Notes',
         entries: [note],
-        isVaultContentLoading: false,
       })
     })
   })
 
-  it('toasts when the markdown file is missing after vault load', async () => {
-    const setToastMessage = vi.fn()
+  it('opens the shell markdown path before the vault index finishes loading', async () => {
+    const onSelectNote = vi.fn()
+    const reloadVault = vi.fn().mockResolvedValue([])
 
     invoke.mockResolvedValue({
-      markdownPath: '/Notes/missing.md',
+      markdownPath: '/Notes/meeting.md',
       vaultPath: '/Notes',
-      relativeNote: 'missing.md',
+      relativeNote: 'meeting.md',
     })
 
-    const { rerender } = renderHook(
-      ({ isVaultContentLoading }) => useOpenMarkdownFromShell({
-        currentVaultPath: '/Notes',
-        enabled: true,
+    renderHook(() => useOpenMarkdownFromShell({
+      ...shellHookProps({
         entries: [],
-        isVaultContentLoading,
-        onSelectNote: vi.fn(),
-        registerVault: vi.fn(),
-        reloadVault: vi.fn().mockResolvedValue([]),
-        setToastMessage,
-        switchVault: vi.fn(),
-        vaultListLoaded: true,
-        vaults: [{ path: '/Notes' }],
+        onSelectNote,
+        reloadVault,
       }),
-      { initialProps: { isVaultContentLoading: true } },
-    )
+    }))
 
-    await act(async () => {
-      rerender({ isVaultContentLoading: false })
+    await waitFor(() => expect(onSelectNote).toHaveBeenCalledWith({
+      path: '/Notes/meeting.md',
+      title: 'meeting',
+      modifiedAt: expect.any(String),
+      fileKind: 'markdown',
+    }))
+    expect(reloadVault).toHaveBeenCalled()
+  })
+
+  it('matches vault paths case-insensitively on Windows-style paths', async () => {
+    const onSelectNote = vi.fn()
+
+    invoke.mockResolvedValue({
+      markdownPath: 'D:/Notes/meeting.md',
+      vaultPath: 'd:/notes',
+      relativeNote: 'meeting.md',
     })
 
-    await waitFor(() => {
-      expect(setToastMessage).toHaveBeenCalledWith(
-        'That Markdown file is not available in the opened folder.',
-      )
-    })
+    renderHook(() => useOpenMarkdownFromShell({
+      ...shellHookProps({
+        currentVaultPath: 'D:/Notes',
+        onSelectNote,
+        vaults: [{ path: 'D:/Notes' }],
+      }),
+    }))
+
+    await waitFor(() => expect(onSelectNote).toHaveBeenCalled())
   })
 })
