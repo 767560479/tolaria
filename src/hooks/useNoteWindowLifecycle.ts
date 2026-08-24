@@ -6,6 +6,7 @@ import {
   getNoteWindowPathCandidates,
   type NoteWindowParams,
 } from '../utils/windowMode'
+import { findTabByNotePath } from './editorTabPathIdentity'
 
 interface NoteWindowActions {
   handleSelectNote: (entry: VaultEntry) => unknown
@@ -157,7 +158,7 @@ function useNoteWindowTitle(
   useEffect(() => {
     if (!noteWindowParams) return
 
-    const activeEntry = tabs.find((tab) => tab.entry.path === activeTabPath)?.entry
+    const activeEntry = findTabByNotePath(tabs, activeTabPath)?.entry
     const title = activeEntry?.title ?? noteWindowParams.noteTitle
     if (!isTauri()) {
       document.title = title

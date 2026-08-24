@@ -207,4 +207,25 @@ describe('TableOfContentsPanel', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText('2.0 KB')).toBeInTheDocument()
   })
+
+  it('builds headings for shell-open style notes that only have a filename title', async () => {
+    render(
+      <TableOfContentsPanel
+        editor={{ document: [], setTextCursorPosition: vi.fn() }}
+        entry={{
+          ...entry,
+          path: String.raw`D:\Notes\meeting.md`,
+          filename: 'meeting.md',
+          title: 'meeting',
+        } as VaultEntry}
+        sourceContent={'# Meeting Notes\n\n## Agenda\n\n### Action items'}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /meeting/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Agenda/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Action items/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Untitled heading/i })).not.toBeInTheDocument()
+  })
 })

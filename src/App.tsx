@@ -116,6 +116,7 @@ import { SETTINGS_SECTION_IDS } from './components/settingsSectionIds'
 import {
   vaultPathForEntry,
 } from './utils/workspaces'
+import { findTabByNotePath } from './hooks/editorTabPathIdentity'
 import { findByNotePath, notePathsMatch } from './utils/notePathIdentity'
 import { activeGitRepositories } from './utils/gitRepositories'
 import { entrySupportsPreviewSourceToggle } from './utils/filePreview'
@@ -940,7 +941,7 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
   }, [notes.activeTabPath, handleRemoveNoteIcon])
 
   const handleOpenInNewWindow = useCallback(() => {
-    const activeTab = notes.tabs.find(t => t.entry.path === notes.activeTabPath)
+    const activeTab = findTabByNotePath(notes.tabs, notes.activeTabPath)
     if (activeTab) {
       openNoteInNewWindow(
         activeTab.entry.path,

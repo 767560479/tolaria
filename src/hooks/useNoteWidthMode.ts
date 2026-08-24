@@ -5,6 +5,7 @@ import type { NoteWidthMode, Settings, VaultEntry } from '../types'
 import type { FrontmatterValue } from '../components/Inspector'
 import type { FrontmatterOpOptions } from './frontmatterOps'
 import { trackEvent } from '../lib/telemetry'
+import { findTabByNotePath } from './editorTabPathIdentity'
 import { canPersistNoteWidthMode, resolveNoteWidthMode, toggleNoteWidthMode } from '../utils/noteWidth'
 
 type VaultPath = VaultEntry['path']
@@ -55,7 +56,7 @@ interface PersistWidthRequest {
 }
 
 function resolveActiveTab({ tabs, activeTabPath }: ActiveTabRequest): EditorTab | null {
-  return tabs.find((tab) => tab.entry.path === activeTabPath) ?? null
+  return findTabByNotePath(tabs, activeTabPath) ?? null
 }
 
 function resolveCurrentWidth({
