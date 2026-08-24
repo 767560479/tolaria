@@ -1,9 +1,10 @@
 import { notePathsMatch } from '../utils/notePathIdentity'
 import type { CachedTabState } from './editorBlockResolution'
 
-type TabLike = { entry: { path: string }; content: string }
+type TabWithEntryPath = { entry: { path: string } }
+type TabWithContent = TabWithEntryPath & { content: string }
 
-export function findTabByNotePath<T extends TabLike>(
+export function findTabByNotePath<T extends TabWithEntryPath>(
   tabs: readonly T[],
   path: string | null | undefined,
 ): T | undefined {
@@ -11,7 +12,7 @@ export function findTabByNotePath<T extends TabLike>(
   return tabs.find((tab) => notePathsMatch(tab.entry.path, path))
 }
 
-export function tabContentForPath(tabs: readonly TabLike[], path: string): string | undefined {
+export function tabContentForPath(tabs: readonly TabWithContent[], path: string): string | undefined {
   return findTabByNotePath(tabs, path)?.content
 }
 
