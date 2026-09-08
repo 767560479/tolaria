@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isShellMarkdownOpenPayload,
   normalizeShellMarkdownNavigation,
+  shellMarkdownNoteTitle,
   shellMarkdownVaultLabel,
 } from './openMarkdownFromShell'
 
@@ -36,11 +37,21 @@ describe('openMarkdownFromShell', () => {
     expect(shellMarkdownVaultLabel('D:\\Notes')).toBe('Notes')
   })
 
-  it('rejects nested relative notes and non-markdown names', () => {
+  it('accepts nested relative notes and rejects traversal', () => {
     expect(normalizeShellMarkdownNavigation({
       markdownPath: '/vault/nested/note.md',
       vaultPath: '/vault',
       relativeNote: 'nested/note.md',
+    })).toEqual({
+      markdownPath: '/vault/nested/note.md',
+      vaultPath: '/vault',
+      relativeNote: 'nested/note.md',
+    })
+    expect(shellMarkdownNoteTitle('nested/note.md')).toBe('note')
+    expect(normalizeShellMarkdownNavigation({
+      markdownPath: '/vault/outside.md',
+      vaultPath: '/vault',
+      relativeNote: '../outside.md',
     })).toBeNull()
     expect(normalizeShellMarkdownNavigation({
       markdownPath: '/vault/note.txt',

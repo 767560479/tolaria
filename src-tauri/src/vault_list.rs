@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::app_config::{preferred_app_config_path, resolve_existing_or_preferred_app_config_path};
 use crate::commands::expand_tilde;
@@ -110,6 +110,47 @@ pub fn load_vault_list() -> Result<VaultList, String> {
         .map(expand_vault_list_paths)
         .map(normalize_vault_colors)
         .map(|list| apply_instance_launch(list, launch.as_ref()))
+}
+
+pub fn push_unique_vault_root_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
+    if path.as_os_str().is_empty() {
+        return;
+    }
+    if paths.iter().any(|existing| existing == &path) {
+        return;
+    }
+    paths.push(path);
+}
+
+pub fn listed_vault_roots(list: &VaultList) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    for entry in &list.vaults {
+        push_unique_vault_root_path(&mut roots, PathBuf::from(entry.path.clone()));
+    }
+    if let Some(active_vault) = &list.active_vault {
+        push_unique_vault_root_path(&mut roots, PathBuf::from(active_vault.clone()));
+    }
+    for hidden_default in &list.hidden_defaults {
+        push_unique_vault_root_path(&mut roots, PathBuf::from(hidden_default.clone()));
+    }
+    roots
+}
+
+fn comparable_path(path: &Path) -> PathBuf {
+    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+}
+
+pub fn find_registered_vault_root(path: &Path, registered_roots: &[PathBuf]) -> Option<PathBuf> {
+    registered_roots
+        .iter()
+        .filter_map(|root| {
+            let comparable_root = comparable_path(root);
+            comparable_path(path)
+                .starts_with(&comparable_root)
+                .then_some((comparable_root.components().count(), root.clone()))
+        })
+        .max_by_key(|(depth, _)| *depth)
+        .map(|(_, root)| root)
 }
 
 pub fn save_vault_list(list: &VaultList) -> Result<(), String> {
@@ -355,5 +396,46 @@ mod tests {
         fs::write(&path, r#"{"vaults":[],"active_vault":null}"#).unwrap();
         let loaded = load_at(&path).unwrap();
         assert!(loaded.hidden_defaults.is_empty());
+    }
+
+    #[test]
+    fn listed_vault_roots_include_active_and_hidden_defaults() {
+        let list = VaultList {
+            vaults: vec![VaultEntry {
+                label: "Listed".to_string(),
+                path: "/listed".to_string(),
+                ..Default::default()
+            }],
+            active_vault: Some("/active".to_string()),
+            default_workspace_path: None,
+            hidden_defaults: vec!["/hidden-default".to_string()],
+        };
+
+        assert_eq!(
+            listed_vault_roots(&list),
+            vec![
+                PathBuf::from("/listed"),
+                PathBuf::from("/active"),
+                PathBuf::from("/hidden-default"),
+            ]
+        );
+    }
+
+    #[test]
+    fn finds_the_deepest_registered_vault_root() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let parent_root = dir.path().join("vault");
+        let nested_root = parent_root.join("projects");
+        let note_path = nested_root.join("note.md");
+        std::fs::create_dir_all(&nested_root).unwrap();
+        fs::write(&note_path, "# Note\n").unwrap();
+
+        let canonical_note = note_path.canonicalize().unwrap();
+        let found = find_registered_vault_root(
+            canonical_note.as_path(),
+            &[parent_root.clone(), nested_root.clone()],
+        );
+
+        assert_eq!(found, Some(nested_root));
     }
 }

@@ -32,7 +32,6 @@ interface UseOpenMarkdownFromShellConfig {
   locale?: AppLocale
   onSelectNote: (entry: VaultEntry) => Promise<void> | void
   registerVault: (path: string, label: string) => Promise<void> | void
-  reloadVault: () => Promise<VaultEntry[]>
   setToastMessage: (message: string) => void
   switchVault: (path: string) => void
   vaultListLoaded: boolean
@@ -64,9 +63,10 @@ function shellVaultPathsMatch(left: string, right: string): boolean {
 }
 
 function shellMarkdownVaultEntry(request: ShellMarkdownNavigation): VaultEntry {
+  const filename = request.relativeNote.split('/').filter(Boolean).at(-1) ?? request.relativeNote
   return normalizeVaultEntry({
     path: request.markdownPath,
-    filename: request.relativeNote,
+    filename,
     title: shellMarkdownNoteTitle(request.relativeNote),
     fileKind: 'markdown',
   }, request.vaultPath)
@@ -86,18 +86,13 @@ async function selectShellOpenEntry({
   entries,
   onSelectNote,
   request,
-  reloadVault,
 }: {
   entries: VaultEntry[]
   onSelectNote: (entry: VaultEntry) => Promise<void> | void
   request: ShellMarkdownNavigation
-  reloadVault: () => Promise<VaultEntry[]>
 }): Promise<boolean> {
   const indexedEntry = findEntryForShellOpen(entries, request)
   await onSelectNote(indexedEntry ?? shellMarkdownVaultEntry(request))
-  void reloadVault().catch((error) => {
-    console.warn('[shell-open-markdown] Background vault refresh after shell open failed:', error)
-  })
   return true
 }
 
@@ -223,7 +218,6 @@ function useShellMarkdownNavigation({
   locale,
   onSelectNote,
   pendingNavigation,
-  reloadVault,
   setPendingNavigation,
   setToastMessage,
 }: {
@@ -233,7 +227,6 @@ function useShellMarkdownNavigation({
   locale: AppLocale
   onSelectNote: (entry: VaultEntry) => Promise<void> | void
   pendingNavigation: ShellMarkdownNavigation | null
-  reloadVault: () => Promise<VaultEntry[]>
   setPendingNavigation: (request: ShellMarkdownNavigation | null) => void
   setToastMessage: (message: string) => void
 }) {
@@ -248,7 +241,7 @@ function useShellMarkdownNavigation({
     activeAttemptRef.current = key
 
     const request = pendingNavigation
-    void selectShellOpenEntry({ entries, onSelectNote, request, reloadVault })
+    void selectShellOpenEntry({ entries, onSelectNote, request })
       .then((selected) => {
         setPendingNavigation(null)
         if (selected) {
@@ -273,7 +266,6 @@ function useShellMarkdownNavigation({
     locale,
     onSelectNote,
     pendingNavigation,
-    reloadVault,
     setPendingNavigation,
     setToastMessage,
   ])
@@ -286,7 +278,6 @@ export function useOpenMarkdownFromShell({
   locale = 'en',
   onSelectNote,
   registerVault,
-  reloadVault,
   setToastMessage,
   switchVault,
   vaultListLoaded,
@@ -327,7 +318,6 @@ export function useOpenMarkdownFromShell({
     locale,
     onSelectNote,
     pendingNavigation,
-    reloadVault,
     setPendingNavigation,
     setToastMessage,
   })

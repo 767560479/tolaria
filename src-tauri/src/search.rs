@@ -156,14 +156,23 @@ fn is_markdown_search_candidate(vault_dir: &Path, path: &Path) -> bool {
     }
 
     let vault_relative_path = path.strip_prefix(vault_dir).unwrap_or(path);
-    !vault_relative_path
-        .components()
-        .any(|component| component.as_os_str().to_string_lossy().starts_with('.'))
+    !vault_relative_path.components().any(|component| {
+        crate::vault::is_skipped_vault_dir(&component.as_os_str().to_string_lossy())
+    })
+}
+
+fn should_descend_for_search(entry: &walkdir::DirEntry) -> bool {
+    if entry.depth() == 0 || !entry.file_type().is_dir() {
+        return true;
+    }
+    !crate::vault::is_skipped_vault_dir(&entry.file_name().to_string_lossy())
 }
 
 fn collect_markdown_paths(vault_dir: &Path, hide_gitignored_files: bool) -> Vec<PathBuf> {
     let paths = WalkDir::new(vault_dir)
+        .follow_links(false)
         .into_iter()
+        .filter_entry(should_descend_for_search)
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.into_path())
         .filter(|path| is_markdown_search_candidate(vault_dir, path))
@@ -442,5 +451,25 @@ mod tests {
 
         assert_eq!(response.results.len(), 1);
         assert_eq!(response.results[0].title, "Body Match");
+    }
+
+    #[test]
+    fn test_search_vault_skips_dependency_folder_notes() {
+        let dir = Builder::new()
+            .prefix("search-node-modules-")
+            .tempdir_in(std::env::current_dir().unwrap())
+            .unwrap();
+        fs::write(dir.path().join("visible.md"), "# Visible\n\nneedle").unwrap();
+        fs::create_dir_all(dir.path().join("node_modules/pkg")).unwrap();
+        fs::write(
+            dir.path().join("node_modules/pkg/readme.md"),
+            "# Hidden Package\n\nneedle",
+        )
+        .unwrap();
+
+        let response = search_vault(dir.path().to_str().unwrap(), "needle", "keyword", 10).unwrap();
+
+        assert_eq!(response.results.len(), 1);
+        assert_eq!(response.results[0].title, "Visible");
     }
 }

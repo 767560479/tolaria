@@ -95,6 +95,43 @@ fn test_scan_vault_skips_hidden_folders() {
 }
 
 #[test]
+fn test_scan_vault_skips_dependency_and_build_folders() {
+    let dir = TempDir::new().unwrap();
+    create_test_file(dir.path(), "note.md", "# Note\n");
+    create_test_file(dir.path(), "node_modules/pkg/readme.md", "# Package\n");
+    create_test_file(dir.path(), "target/debug/out.md", "# Rust target\n");
+    create_test_file(dir.path(), "dist/bundle.md", "# Dist\n");
+    create_test_file(dir.path(), "build/output.md", "# Build\n");
+    create_test_file(dir.path(), "__pycache__/cache.md", "# Pycache\n");
+    create_test_file(dir.path(), "venv/lib/site.md", "# Venv\n");
+
+    let entries = scan_vault(dir.path(), &HashMap::new()).unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].filename, "note.md");
+}
+
+#[test]
+fn test_scan_vault_does_not_follow_directory_symlinks() {
+    let dir = TempDir::new().unwrap();
+    create_test_file(dir.path(), "note.md", "# Note\n");
+    let outside = TempDir::new().unwrap();
+    create_test_file(outside.path(), "escaped.md", "# Escaped\n");
+    let link = dir.path().join("linked");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(outside.path(), &link).unwrap();
+    #[cfg(windows)]
+    {
+        if std::os::windows::fs::symlink_dir(outside.path(), &link).is_err() {
+            return;
+        }
+    }
+
+    let entries = scan_vault(dir.path(), &HashMap::new()).unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].filename, "note.md");
+}
+
+#[test]
 fn test_scan_vault_nonexistent_path() {
     let result = scan_vault(
         Path::new("/nonexistent/path/that/does/not/exist"),

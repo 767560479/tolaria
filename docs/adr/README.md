@@ -232,5 +232,6 @@ proposed → active → superseded
 | [0173](0173-windows-only-unsigned-release-via-github-actions.md) | Windows-only unsigned release via GitHub Actions | active |
 | [0174](0174-picgo-compatible-gallery-upload-as-installation-setting.md) | PicGo-compatible gallery upload as installation setting | active |
 | [0175](0175-fork-remove-mcp-and-cli-agents.md) | Fork removes vault MCP server and CLI coding agents | accepted |
-| [0176](0176-windows-shell-open-markdown-as-parent-vault.md) | Windows shell Open With opens Markdown as parent-folder vault | superseded -> [0177](0177-windows-shell-open-markdown-spawns-vault-instance.md) |
+| [0176](0176-windows-shell-open-markdown-as-parent-vault.md) | Windows shell Open With opens Markdown as parent-folder vault | superseded -> [0181](0181-shell-open-registered-vault-and-skipped-scan-dirs.md) |
 | [0177](0177-windows-shell-open-markdown-spawns-vault-instance.md) | Windows shell Open With spawns a separate vault instance | accepted |
+| [0181](0181-shell-open-registered-vault-and-skipped-scan-dirs.md) | Shell Open With prefers a registered vault and skips dependency scans | accepted |

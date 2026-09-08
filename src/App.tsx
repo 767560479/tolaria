@@ -1525,7 +1525,6 @@ function MainApp({ noteWindowParams }: { noteWindowParams: NoteWindowParams | nu
     locale: appLocale,
     onSelectNote: notes.handleSelectNote,
     registerVault: registerVaultSelection,
-    reloadVault: vault.reloadVault,
     setToastMessage,
     switchVault: vaultSwitcher.switchVault,
     vaultListLoaded: vaultSwitcher.loaded,

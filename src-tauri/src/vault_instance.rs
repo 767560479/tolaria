@@ -145,10 +145,11 @@ pub fn open_vault_in_new_window(
 }
 
 /// Open a Markdown file in a separate vault-instance process.
-/// The parent directory becomes the vault root; the note path is passed so the
-/// instance can select it without changing the ordinary shared `active_vault`.
+/// Prefer a registered ancestor vault when the file lives inside one; otherwise
+/// the parent directory becomes the vault root.
 pub fn open_markdown_in_new_vault_instance(
     markdown_path: &Path,
+    vault_path: &Path,
     vault_color: Option<&str>,
 ) -> Result<(), String> {
     let resolved_markdown = std::fs::canonicalize(markdown_path)
@@ -156,13 +157,13 @@ pub fn open_markdown_in_new_vault_instance(
     if !resolved_markdown.is_file() {
         return Err("Markdown path must be a file".to_string());
     }
-    let resolved_vault = resolved_markdown
-        .parent()
-        .filter(|path| !path.as_os_str().is_empty())
-        .ok_or_else(|| "Markdown file has no parent directory".to_string())?
-        .to_path_buf();
+    let resolved_vault = std::fs::canonicalize(vault_path)
+        .map_err(|error| format!("Vault is not available: {error}"))?;
     if !resolved_vault.is_dir() {
         return Err("Vault path must be a directory".to_string());
+    }
+    if !resolved_markdown.starts_with(&resolved_vault) {
+        return Err("Markdown file is not inside the vault".to_string());
     }
 
     let executable = tauri::process::current_binary(&tauri::Env::default())

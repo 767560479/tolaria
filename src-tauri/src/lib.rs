@@ -346,7 +346,8 @@ pub fn run() {
     #[cfg(desktop)]
     {
         // Explorer "Open with" on a cold start: spawn a vault instance for the
-        // Markdown parent folder and exit before creating the ordinary main UI.
+        // Markdown file (registered ancestor vault when possible) and exit
+        // before creating the ordinary main UI.
         if open_markdown::try_delegate_shell_markdown_launch() {
             return;
         }

@@ -51,7 +51,11 @@ where
     if !markdown_path.is_file() {
         return false;
     }
-    match crate::vault_instance::open_markdown_in_new_vault_instance(markdown_path, None) {
+    match crate::vault_instance::open_markdown_in_new_vault_instance(
+        markdown_path,
+        Path::new(&payload.vault_path),
+        None,
+    ) {
         Ok(()) => true,
         Err(error) => {
             log::error!("Failed to open shell Markdown in a vault instance: {error}");
@@ -95,9 +99,46 @@ fn store_and_emit(app: &AppHandle, payload: OpenMarkdownPayload) {
 }
 
 fn open_markdown_payload_for_path(path: &Path) -> Option<OpenMarkdownPayload> {
+    payload_for_markdown_path(path, &shell_open_registered_roots())
+}
+
+fn shell_open_registered_roots() -> Vec<PathBuf> {
+    crate::vault_list::load_vault_list()
+        .map(|list| crate::vault_list::listed_vault_roots(&list))
+        .unwrap_or_default()
+}
+
+pub(crate) fn payload_for_markdown_path(
+    path: &Path,
+    registered_roots: &[PathBuf],
+) -> Option<OpenMarkdownPayload> {
     if !is_markdown_path(path) {
         return None;
     }
+    if let Some(payload) = payload_for_registered_vault(path, registered_roots) {
+        return Some(payload);
+    }
+    payload_for_parent_vault(path)
+}
+
+fn payload_for_registered_vault(
+    path: &Path,
+    registered_roots: &[PathBuf],
+) -> Option<OpenMarkdownPayload> {
+    let vault_path = crate::vault_list::find_registered_vault_root(path, registered_roots)?;
+    let relative_note =
+        crate::vault::path_identity::vault_relative_path_string(&vault_path, path).ok()?;
+    if relative_note.is_empty() {
+        return None;
+    }
+    Some(OpenMarkdownPayload {
+        markdown_path: path_to_string(path),
+        vault_path: path_to_string(&vault_path),
+        relative_note,
+    })
+}
+
+fn payload_for_parent_vault(path: &Path) -> Option<OpenMarkdownPayload> {
     let parent = path.parent().filter(|value| !value.as_os_str().is_empty())?;
     let relative_note = path.file_name()?.to_string_lossy().into_owned();
     Some(OpenMarkdownPayload {
@@ -172,7 +213,7 @@ mod tests {
     #[test]
     fn parses_plain_markdown_path_as_parent_vault() {
         let markdown = join_path(&["Notes", "meeting.md"]);
-        let payload = parse_open_markdown_from_args(["tolaria", markdown.as_os_str()]);
+        let payload = payload_for_markdown_path(&markdown, &[]);
 
         assert_eq!(
             payload,
@@ -202,12 +243,8 @@ mod tests {
         ]);
 
         assert_eq!(
-            payload,
-            Some(OpenMarkdownPayload {
-                markdown_path: path_to_string(&markdown),
-                vault_path: path_to_string(Path::new("Notes")),
-                relative_note: "actual.md".to_string(),
-            })
+            payload.map(|value| value.relative_note),
+            Some("actual.md".to_string())
         );
     }
 
@@ -226,16 +263,25 @@ mod tests {
             PathBuf::from("/tmp/Notes"),
         );
 
-        let payload = parse_open_markdown_from_args(["tolaria", url]);
+        let from_path = payload_for_markdown_path(&markdown, &[]);
+        let from_url = parse_open_markdown_from_args(["tolaria", url]);
 
         assert_eq!(
-            payload,
+            from_path,
             Some(OpenMarkdownPayload {
                 markdown_path: path_to_string(&markdown),
                 vault_path: path_to_string(&vault),
                 relative_note: "hello.md".to_string(),
             })
         );
+        assert_eq!(
+            from_url.as_ref().map(|value| value.markdown_path.as_str()),
+            Some(path_to_string(&markdown).as_str())
+        );
+        assert!(from_url
+            .as_ref()
+            .is_some_and(|value| value.relative_note.eq_ignore_ascii_case("hello.md")
+                || value.relative_note.to_ascii_lowercase().ends_with("/hello.md")));
     }
 
     #[test]
@@ -271,6 +317,44 @@ mod tests {
         assert_eq!(
             payload.map(|value| value.relative_note),
             Some("meeting.md".to_string())
+        );
+    }
+
+    #[test]
+    fn uses_registered_ancestor_vault_for_nested_markdown() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let vault = dir.path().join("vault");
+        let nested = vault.join("projects");
+        std::fs::create_dir_all(&nested).unwrap();
+        let markdown = nested.join("meeting.md");
+        std::fs::write(&markdown, "# Meeting\n").unwrap();
+
+        let payload = payload_for_markdown_path(&markdown, &[vault.clone()]);
+
+        assert_eq!(
+            payload,
+            Some(OpenMarkdownPayload {
+                markdown_path: path_to_string(&markdown),
+                vault_path: path_to_string(&vault),
+                relative_note: "projects/meeting.md".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn prefers_the_deepest_registered_vault_root() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let parent = dir.path().join("vault");
+        let nested = parent.join("projects");
+        std::fs::create_dir_all(&nested).unwrap();
+        let markdown = nested.join("meeting.md");
+        std::fs::write(&markdown, "# Meeting\n").unwrap();
+
+        let payload = payload_for_markdown_path(&markdown, &[parent.clone(), nested.clone()]);
+
+        assert_eq!(
+            payload.map(|value| (value.vault_path, value.relative_note)),
+            Some((path_to_string(&nested), "meeting.md".to_string()))
         );
     }
 }

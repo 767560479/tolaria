@@ -209,7 +209,7 @@ Deep links are navigation-only. Opening one can focus Tolaria, switch to a regis
 
 ### Windows shell Open With for Markdown
 
-On Windows, Tolaria can appear in Explorer’s “Open with” list for `.md` files (Alternate association, not the forced default). Shell open is not a separate preview mode and does not switch the ordinary main vault: it spawns a separate vault-instance process whose root is the file’s immediate parent folder, then selects the note inside that process. Closing the instance leaves the main window and shared `active_vault` unchanged. Git is not required. See [ADR-0177](adr/0177-windows-shell-open-markdown-spawns-vault-instance.md).
+On Windows, Tolaria can appear in Explorer’s “Open with” list for `.md` files (Alternate association, not the forced default). Shell open is not a separate preview mode and does not switch the ordinary main vault: it spawns a separate vault-instance process. If the Markdown file already lives in a registered vault, that vault is the instance root (nested `relative_note` allowed); otherwise the file’s immediate parent folder is the root. The instance selects the note without forcing a second full vault reload. Closing the instance leaves the main window and shared `active_vault` unchanged. Git is not required. See [ADR-0181](adr/0181-shell-open-registered-vault-and-skipped-scan-dirs.md) and [ADR-0177](adr/0177-windows-shell-open-markdown-spawns-vault-instance.md).
 
 ### File kinds and binary previews
 

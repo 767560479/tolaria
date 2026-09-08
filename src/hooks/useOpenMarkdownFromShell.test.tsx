@@ -41,7 +41,6 @@ function shellHookProps(overrides: Partial<Parameters<typeof useOpenMarkdownFrom
     entries: [] as VaultEntry[],
     onSelectNote: vi.fn(),
     registerVault: vi.fn().mockResolvedValue(undefined),
-    reloadVault: vi.fn().mockResolvedValue([]),
     setToastMessage: vi.fn(),
     switchVault: vi.fn(),
     vaultListLoaded: true,
@@ -79,7 +78,6 @@ describe('useOpenMarkdownFromShell', () => {
           registerVault,
           switchVault,
           vaults: [],
-          reloadVault: vi.fn().mockResolvedValue([note]),
         }),
       }),
       {
@@ -121,7 +119,6 @@ describe('useOpenMarkdownFromShell', () => {
           entries,
           registerVault,
           switchVault,
-          reloadVault: vi.fn().mockResolvedValue([note]),
         }),
       }),
       {
@@ -145,7 +142,6 @@ describe('useOpenMarkdownFromShell', () => {
 
   it('opens the shell markdown path before the vault index finishes loading', async () => {
     const onSelectNote = vi.fn()
-    const reloadVault = vi.fn().mockResolvedValue([])
 
     invoke.mockResolvedValue({
       markdownPath: '/Notes/meeting.md',
@@ -157,7 +153,6 @@ describe('useOpenMarkdownFromShell', () => {
       ...shellHookProps({
         entries: [],
         onSelectNote,
-        reloadVault,
       }),
     }))
 
@@ -167,7 +162,31 @@ describe('useOpenMarkdownFromShell', () => {
       filename: 'meeting.md',
       fileKind: 'markdown',
     })))
-    expect(reloadVault).toHaveBeenCalled()
+  })
+
+  it('opens a nested note inside a registered vault without waiting for the index', async () => {
+    const onSelectNote = vi.fn()
+
+    invoke.mockResolvedValue({
+      markdownPath: '/Notes/projects/meeting.md',
+      vaultPath: '/Notes',
+      relativeNote: 'projects/meeting.md',
+    })
+
+    renderHook(() => useOpenMarkdownFromShell({
+      ...shellHookProps({
+        currentVaultPath: '/Notes',
+        entries: [],
+        onSelectNote,
+      }),
+    }))
+
+    await waitFor(() => expect(onSelectNote).toHaveBeenCalledWith(expect.objectContaining({
+      path: '/Notes/projects/meeting.md',
+      title: 'meeting',
+      filename: 'meeting.md',
+      fileKind: 'markdown',
+    })))
   })
 
   it('matches vault paths case-insensitively on Windows-style paths', async () => {

@@ -248,6 +248,15 @@ pub fn reload_entry(path: &Path) -> Result<VaultEntry, String> {
 
 /// Directories hidden from user-facing vault scans.
 const HIDDEN_DIRS: &[&str] = &[".git", ".laputa", ".DS_Store"];
+/// Dependency and build output directories that are never notes.
+const SKIPPED_VAULT_DIRS: &[&str] = &[
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    "__pycache__",
+    "venv",
+];
 /// Keep type definitions in their dedicated sidebar section instead of the generic folder tree.
 const FOLDER_TREE_EXCLUDED_DIRS: &[&str] = &["type"];
 
@@ -255,8 +264,19 @@ fn is_hidden_dir(name: &str) -> bool {
     name.starts_with('.') || HIDDEN_DIRS.contains(&name)
 }
 
+fn is_dependency_or_build_dir(name: &str) -> bool {
+    SKIPPED_VAULT_DIRS
+        .iter()
+        .any(|dir| dir.eq_ignore_ascii_case(name))
+}
+
+/// Directories the vault scanner, folder tree, and search must not descend into.
+pub fn is_skipped_vault_dir(name: &str) -> bool {
+    is_hidden_dir(name) || is_dependency_or_build_dir(name)
+}
+
 fn is_folder_tree_hidden_dir(name: &str) -> bool {
-    is_hidden_dir(name) || FOLDER_TREE_EXCLUDED_DIRS.contains(&name)
+    is_skipped_vault_dir(name) || FOLDER_TREE_EXCLUDED_DIRS.contains(&name)
 }
 
 pub(crate) fn is_md_file(path: &Path) -> bool {
@@ -409,7 +429,7 @@ fn scan_all_files(
     entries: &mut Vec<VaultEntry>,
 ) {
     let walker = WalkDir::new(vault_path)
-        .follow_links(true)
+        .follow_links(false)
         .into_iter()
         .filter_entry(|e| {
             if e.file_type().is_dir() {
@@ -418,7 +438,7 @@ fn scan_all_files(
                 if e.depth() == 0 {
                     return true;
                 }
-                return !is_hidden_dir(&name);
+                return !is_skipped_vault_dir(&name);
             }
             true
         });

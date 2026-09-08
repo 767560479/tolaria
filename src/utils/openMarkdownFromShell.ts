@@ -37,8 +37,19 @@ export function shellMarkdownVaultLabel(vaultPath: string): string {
 }
 
 export function shellMarkdownNoteTitle(relativeNote: string): string {
-  const stem = relativeNote.replace(/\.md$/iu, '')
-  return stem || relativeNote
+  const segments = normalizeNotePathSeparators(relativeNote).split('/').filter(Boolean)
+  const base = segments.at(-1) || relativeNote
+  const stem = base.replace(/\.md$/iu, '')
+  return stem || base
+}
+
+function relativeNoteSegments(relativeNote: string): string[] | null {
+  const segments = relativeNote.split('/').filter(Boolean)
+  if (segments.length === 0) return null
+  if (segments.some((segment) => segment === '.' || segment === '..')) return null
+  const last = segments.at(-1) ?? ''
+  if (!last.toLocaleLowerCase().endsWith('.md')) return null
+  return segments
 }
 
 export function normalizeShellMarkdownNavigation(
@@ -47,7 +58,8 @@ export function normalizeShellMarkdownNavigation(
   const markdownPath = normalizeNotePathSeparators(payload.markdownPath).replace(/\/+$/u, '')
   const vaultPath = normalizeNotePathSeparators(payload.vaultPath).replace(/\/+$/u, '')
   const relativeNote = normalizeNotePathSeparators(payload.relativeNote).replace(/^\/+/u, '')
-  if (!markdownPath || !vaultPath || !relativeNote || relativeNote.includes('/')) return null
-  if (!relativeNote.toLocaleLowerCase().endsWith('.md')) return null
-  return { markdownPath, vaultPath, relativeNote }
+  if (!markdownPath || !vaultPath || !relativeNote) return null
+  const segments = relativeNoteSegments(relativeNote)
+  if (!segments) return null
+  return { markdownPath, vaultPath, relativeNote: segments.join('/') }
 }

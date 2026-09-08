@@ -7,45 +7,18 @@ use std::path::{Path, PathBuf};
 use super::boundary::{with_validated_path, ValidatedPathMode};
 
 fn collect_registered_vault_roots(vault_list: &vault_list::VaultList) -> Vec<PathBuf> {
-    let mut roots = Vec::new();
-    for entry in &vault_list.vaults {
-        push_unique_vault_root_path(
-            &mut roots,
-            PathBuf::from(expand_tilde(&entry.path).into_owned()),
-        );
-    }
-
-    if let Some(active_vault) = &vault_list.active_vault {
-        push_unique_vault_root_path(
-            &mut roots,
-            PathBuf::from(expand_tilde(active_vault).into_owned()),
-        );
-    }
-
-    for hidden_default in &vault_list.hidden_defaults {
-        push_unique_vault_root_path(
-            &mut roots,
-            PathBuf::from(expand_tilde(hidden_default).into_owned()),
-        );
-    }
+    let mut roots = vault_list::listed_vault_roots(vault_list);
 
     #[cfg(not(test))]
     if let Ok(default_path) = vault::default_vault_path() {
-        push_unique_vault_root_path(&mut roots, default_path);
+        vault_list::push_unique_vault_root_path(&mut roots, default_path);
     }
 
     if let Some(dev_demo_path) = local_dev_demo_vault_path() {
-        push_unique_vault_root_path(&mut roots, dev_demo_path);
+        vault_list::push_unique_vault_root_path(&mut roots, dev_demo_path);
     }
 
     roots
-}
-
-fn push_unique_vault_root_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
-    if paths.iter().any(|existing| existing == &path) {
-        return;
-    }
-    paths.push(path);
 }
 
 #[cfg(all(debug_assertions, not(test)))]
@@ -60,15 +33,7 @@ fn local_dev_demo_vault_path() -> Option<PathBuf> {
 }
 
 fn find_registered_vault_root(path: &Path, registered_roots: &[PathBuf]) -> Option<PathBuf> {
-    registered_roots
-        .iter()
-        .filter_map(|root| {
-            let canonical_root = root.canonicalize().ok()?;
-            path.starts_with(&canonical_root)
-                .then_some((canonical_root.components().count(), root.clone()))
-        })
-        .max_by_key(|(depth, _)| *depth)
-        .map(|(_, root)| root)
+    vault_list::find_registered_vault_root(path, registered_roots)
 }
 
 fn resolve_reload_vault_path(
