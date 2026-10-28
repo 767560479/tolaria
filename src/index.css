@@ -34,15 +34,15 @@
   color-scheme: light;
 
   /* --- Semantic surfaces (light mode) --- */
-  --surface-app: #F7F4EF;
-  --surface-sidebar: #ebe7e0;
-  --surface-panel: #F7F4EF;
-  --surface-card: #FAF8F4;
-  --surface-popover: #FAF8F4;
-  --surface-input: #FAF8F4;
-  --surface-button: #DDD8CF;
-  --surface-dialog: #FAF8F4;
-  --surface-editor: #F7F4EF;
+  --surface-app: #E0DBD3;
+  --surface-sidebar: #D6D0C6;
+  --surface-panel: #E0DBD3;
+  --surface-card: #ebe7e0;
+  --surface-popover: #ebe7e0;
+  --surface-input: #ebe7e0;
+  --surface-button: #C4BDB0;
+  --surface-dialog: #ebe7e0;
+  --surface-editor: #E0DBD3;
   --surface-overlay: rgba(0, 0, 0, 0.3);
 
   /* --- Semantic text (light mode) --- */
@@ -55,22 +55,22 @@
   --text-inverse: #FFFFFF;
 
   /* --- Semantic borders (light mode) --- */
-  --border-default: #DDD8CF;
-  --border-subtle: #E3DFD7;
-  --border-strong: #CFC8BC;
-  --border-input: #DDD8CF;
-  --border-dialog: #DDD8CF;
+  --border-default: #C4BDB0;
+  --border-subtle: #CEC7BB;
+  --border-strong: #B5AD9F;
+  --border-input: #C4BDB0;
+  --border-dialog: #C4BDB0;
   --border-focus: #155DFF;
 
   /* --- Interaction states (light mode) --- */
-  --state-hover: #DDD8CF;
-  --state-hover-subtle: #E3DFD7;
+  --state-hover: #C4BDB0;
+  --state-hover-subtle: #CEC7BB;
   --state-selected: #E8F4FE;
   --state-selected-strong: #D8ECFE;
   --state-active: #E8F4FE;
   --state-focus-ring: #155DFF;
   --state-drag-target: #155DFF18;
-  --state-disabled: #E3DFD7;
+  --state-disabled: #CEC7BB;
 
   /* --- Accent roles (light mode) --- */
   --accent-blue: #155DFF;
