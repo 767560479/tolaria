@@ -121,6 +121,36 @@ describe('buildReleaseHistoryPage', () => {
     expect(html.indexOf('Tolaria Alpha 2026.4.20.10')).toBeLessThan(html.indexOf('Tolaria Alpha 2026.4.20.9'))
   })
 
+  it('sorts by calendar version in the tag even when published_at order disagrees', () => {
+    const html = buildReleaseHistoryPage([
+      {
+        body: 'Older calendar, newer publish',
+        name: 'Tolaria 2026.9.8',
+        prerelease: false,
+        published_at: '2026-10-28T12:00:00Z',
+        tag_name: 'stable-v2026.9.8',
+      },
+      {
+        body: 'Same-day rebuild',
+        name: 'Tolaria 2026.10.28.1',
+        prerelease: false,
+        published_at: '2026-10-28T11:00:00Z',
+        tag_name: 'stable-v2026.10.28.1',
+      },
+      {
+        body: 'Base stable',
+        name: 'Tolaria 2026.10.28',
+        prerelease: false,
+        published_at: '2026-10-28T10:00:00Z',
+        tag_name: 'stable-v2026.10.28',
+      },
+    ])
+
+    expect(html.indexOf('Tolaria 2026.10.28.1')).toBeLessThan(html.indexOf('Tolaria 2026.10.28</h2>'))
+    expect(html.indexOf('Tolaria 2026.10.28</h2>')).toBeLessThan(html.indexOf('Tolaria 2026.9.8'))
+    expect(html).toContain('Stable<span class="tab-count">3</span>')
+  })
+
   it('deduplicates equivalent stable calendar tags and keeps the richer notes', () => {
     const html = buildReleaseHistoryPage([
       {

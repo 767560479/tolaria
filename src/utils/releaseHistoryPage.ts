@@ -517,10 +517,11 @@ const RELEASE_CHANNEL_LABELS: Record<ReleaseChannel, string> = {
 const RELEASE_CHANNEL_LABELS_BY_CHANNEL = new Map<ReleaseChannel, string>(
   Object.entries(RELEASE_CHANNEL_LABELS) as Array<[ReleaseChannel, string]>,
 )
-const STABLE_TAG_DATE_PATTERNS = [
-  /^stable-v(\d{4})\.(\d{1,2})\.(\d{1,2})$/,
+const STABLE_TAG_PATTERNS = [
+  /^stable-v(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\.(\d+))?$/,
   /^v(\d{4})-(\d{1,2})-(\d{1,2})$/,
 ]
+const ALPHA_TAG_PATTERN = /^alpha-v(\d{4})\.(\d{1,2})\.(\d{1,2})-alpha\.(\d+)$/
 
 function escapeMarkupText(value: string): string {
   return value
@@ -698,16 +699,82 @@ function readableNotesUrlForRelease(channel: ReleaseChannel, tagName: string): s
   return `release-notes/${encodeURIComponent(tagName)}.md`
 }
 
+type ReleaseCalendarKey = {
+  day: number
+  month: number
+  rebuild: number
+  year: number
+}
+
+function padCalendarPart(value: string): string {
+  return value.padStart(2, '0')
+}
+
 function normalizeStableTagDate(tagName: string): string | null {
-  for (const pattern of STABLE_TAG_DATE_PATTERNS) {
+  for (const pattern of STABLE_TAG_PATTERNS) {
     const match = tagName.match(pattern)
     if (!match) continue
 
-    const [, year, month, day] = match
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    const [, year, month, day, rebuild] = match
+    const date = `${year}-${padCalendarPart(month)}-${padCalendarPart(day)}`
+    return rebuild ? `${date}.${rebuild}` : date
   }
 
   return null
+}
+
+function parseReleaseCalendarKey(tagName: string): ReleaseCalendarKey | null {
+  const stableMatch = tagName.match(STABLE_TAG_PATTERNS[0])
+  if (stableMatch) {
+    return {
+      year: Number(stableMatch[1]),
+      month: Number(stableMatch[2]),
+      day: Number(stableMatch[3]),
+      rebuild: stableMatch[4] ? Number(stableMatch[4]) : 0,
+    }
+  }
+
+  const legacyStableMatch = tagName.match(STABLE_TAG_PATTERNS[1])
+  if (legacyStableMatch) {
+    return {
+      year: Number(legacyStableMatch[1]),
+      month: Number(legacyStableMatch[2]),
+      day: Number(legacyStableMatch[3]),
+      rebuild: 0,
+    }
+  }
+
+  const alphaMatch = tagName.match(ALPHA_TAG_PATTERN)
+  if (alphaMatch) {
+    return {
+      year: Number(alphaMatch[1]),
+      month: Number(alphaMatch[2]),
+      day: Number(alphaMatch[3]),
+      rebuild: Number(alphaMatch[4]),
+    }
+  }
+
+  return null
+}
+
+function compareReleaseCalendarKey(left: ReleaseCalendarKey, right: ReleaseCalendarKey): number {
+  return left.year - right.year
+    || left.month - right.month
+    || left.day - right.day
+    || left.rebuild - right.rebuild
+}
+
+function compareReleasesByCalendarThenPublished(left: ReleaseEntry, right: ReleaseEntry): number {
+  const leftKey = parseReleaseCalendarKey(left.tagName)
+  const rightKey = parseReleaseCalendarKey(right.tagName)
+  if (leftKey && rightKey) {
+    const calendarOrder = compareReleaseCalendarKey(rightKey, leftKey)
+    if (calendarOrder !== 0) return calendarOrder
+  } else if (leftKey || rightKey) {
+    return leftKey ? -1 : 1
+  }
+
+  return right.publishedTimestamp - left.publishedTimestamp
 }
 
 function stableReleaseDedupeKey(release: ReleaseEntry): string {
@@ -807,7 +874,7 @@ function collectReleaseSections(payload: unknown): ReleaseSections {
 
   for (const channel of ['stable', 'alpha'] as const) {
     const section = Reflect.get(sections, channel) as ReleaseEntry[]
-    section.sort((left, right) => right.publishedTimestamp - left.publishedTimestamp)
+    section.sort(compareReleasesByCalendarThenPublished)
   }
 
   return sections
@@ -895,7 +962,7 @@ export function buildReleaseHistoryPage(releasesPayload: unknown): string {
   <main>
     <header>
       <h1>Tolaria Release History</h1>
-      <p class="subtitle">Stable builds appear when a stable-vYYYY.M.D tag is promoted. Alpha builds update on every push to main.</p>
+      <p class="subtitle">Stable builds appear when a stable-vYYYY.M.D(.N) tag is promoted. Alpha builds update on every push to alpha. Lists sort by calendar version date.</p>
     </header>
     <div class="channel-tabs">
       <div class="channel-tablist" role="tablist" aria-label="Release channels">

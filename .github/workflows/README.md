@@ -9,7 +9,7 @@ Dual-channel unsigned Windows NSIS publishing (see ADR 0178):
 | Trigger | Channel | Version / tag | GitHub Release |
 |---------|---------|---------------|----------------|
 | Push to `alpha` | Alpha | `YYYY.M.D-alpha.N` / `alpha-v…` | **prerelease** |
-| Push tag `stable-vYYYY.M.D` | Stable | `YYYY.M.D` / same tag | **stable** (not prerelease) |
+| Push tag `stable-vYYYY.M.D` or `stable-vYYYY.M.D.N` | Stable | stamp `YYYY.M.D` / same tag (display may include `.N`) | **stable** (not prerelease) |
 
 Build steps (both channels):
 
@@ -29,7 +29,7 @@ Build steps (both channels):
 
 Warm Alpha pushes after a filled Rust cache should drop well below a full cold compile. Version stamping still rebuilds the root crate each run; dependency crates hit cache. The cache is shared across `alpha` pushes and `stable-v*` tag builds via `shared-key: windows-nsis-release`.
 
-Ordinary pushes to `main` do **not** publish. Promote Stable by merging `alpha` → `main`, then pushing `stable-vYYYY.M.D`.
+Ordinary pushes to `main` do **not** publish. Promote Stable by merging `alpha` → `main`, then pushing `stable-vYYYY.M.D` (same-day rebuild: `stable-vYYYY.M.D.N`). Alpha Release titles are date-first (`YYYY.M.D.N Alpha`) so lists sort by packaging calendar.
 
 **No repository secrets are required** beyond the default `GITHUB_TOKEN`.
 

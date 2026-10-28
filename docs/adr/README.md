@@ -235,3 +235,4 @@ proposed → active → superseded
 | [0176](0176-windows-shell-open-markdown-as-parent-vault.md) | Windows shell Open With opens Markdown as parent-folder vault | superseded -> [0181](0181-shell-open-registered-vault-and-skipped-scan-dirs.md) |
 | [0177](0177-windows-shell-open-markdown-spawns-vault-instance.md) | Windows shell Open With spawns a separate vault instance | accepted |
 | [0181](0181-shell-open-registered-vault-and-skipped-scan-dirs.md) | Shell Open With prefers a registered vault and skips dependency scans | accepted |
+| [0182](0182-stable-same-day-rebuild-tags-and-date-first-release-titles.md) | Same-day Stable rebuild tags and date-first release titles | accepted |

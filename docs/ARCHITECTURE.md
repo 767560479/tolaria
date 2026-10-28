@@ -871,8 +871,8 @@ push to alpha
   → restore pnpm / Rust / NSIS caches
   → windows-latest: stamp, build NSIS, publish GitHub prerelease
 
-push tag stable-vYYYY.M.D
-  → stamp version YYYY.M.D
+push tag stable-vYYYY.M.D[.N]
+  → stamp Cargo/Tauri version YYYY.M.D (display may include .N)
   → restore caches, build NSIS, publish GitHub stable release
 
 push to main → no release (Stable baseline only)
@@ -883,9 +883,9 @@ macOS and Linux installers are not produced by this pipeline. See ADR 0173 / 017
 
 ### Versioning
 
-- Alpha builds stamp `YYYY.M.D-alpha.N` and display as `Alpha YYYY.M.D.N`; tags zero-pad as `alpha-vYYYY.M.D-alpha.NNNN`.
-- Stable builds stamp and display `YYYY.M.D` from tag `stable-vYYYY.M.D`.
-- If a stable tag already uses today's UTC date, alpha advances to the next calendar day before assigning `-alpha.N` so Alpha remains semver-newer than Stable across channel switches.
+- Alpha builds stamp `YYYY.M.D-alpha.N` and display as `YYYY.M.D.N Alpha` (date-first); tags zero-pad as `alpha-vYYYY.M.D-alpha.NNNN`.
+- Stable builds stamp `YYYY.M.D` from tag `stable-vYYYY.M.D` or same-day rebuild `stable-vYYYY.M.D.N` (display includes `.N` when present).
+- If a stable tag already uses today's UTC date (including `.N` rebuilds), alpha advances to the next calendar day before assigning `-alpha.N` so Alpha remains semver-newer than Stable across channel switches.
 - The workflow stamps the computed version into `tauri.conf.json` and `Cargo.toml` at build time.
 
 ### In-App Updates

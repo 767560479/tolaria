@@ -65,17 +65,33 @@ jobs:
               return tags
 
           ref = os.environ.get("GITHUB_REF", "")
-          stable_tag_pattern = re.compile(r"^stable-v(\d{4}\.\d{1,2}\.\d{1,2})$")
+          # Same-day Stable rebuilds: stable-vYYYY.M.D.N (Cargo still stamps YYYY.M.D).
+          stable_tag_pattern = re.compile(
+              r"^stable-v(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\.(\d+))?$"
+          )
           alpha_pattern = re.compile(r"^alpha-v(\d{4}\.\d{1,2}\.\d{1,2})-alpha\.(\d+)$")
+
+          def stable_covers_calendar(remote: dict[str, str], calendar: str) -> bool:
+              prefix = f"stable-v{calendar}"
+              return any(
+                  name == prefix or name.startswith(prefix + ".")
+                  for name in remote
+              )
 
           if ref.startswith("refs/tags/"):
               tag = ref.removeprefix("refs/tags/")
               match = stable_tag_pattern.fullmatch(tag)
               if not match:
                   raise SystemExit(f"Unsupported stable tag: {tag}")
-              version = match.group(1)
-              year, month, day = (int(part) for part in version.split("."))
-              display_version = f"{year}.{month}.{day}"
+              year, month, day = (int(match.group(i)) for i in (1, 2, 3))
+              rebuild = int(match.group(4)) if match.group(4) else None
+              # Cargo/semver rejects 4-part versions; stamp the calendar core only.
+              version = f"{year}.{month}.{day}"
+              display_version = (
+                  f"{year}.{month}.{day}.{rebuild}"
+                  if rebuild is not None
+                  else f"{year}.{month}.{day}"
+              )
               prerelease = "false"
               channel = "stable"
           else:
@@ -96,8 +112,8 @@ jobs:
               else:
                   today = datetime.now(timezone.utc).date()
                   calendar_date = today
-                  stable_for_day = f"stable-v{today.year}.{today.month}.{today.day}"
-                  if stable_for_day in remote:
+                  calendar = f"{today.year}.{today.month}.{today.day}"
+                  if stable_covers_calendar(remote, calendar):
                       calendar_date = today + timedelta(days=1)
                   calendar = f"{calendar_date.year}.{calendar_date.month}.{calendar_date.day}"
                   day_prefix = f"alpha-v{calendar}-alpha."
@@ -115,9 +131,11 @@ jobs:
                       )
 
               display_match = re.fullmatch(r"(\d{4})\.(\d{1,2})\.(\d{1,2})-alpha\.(\d+)", version)
+              # Date-first title so GitHub Releases/name sort is chronological
+              # (avoid "Alpha …" clustering ahead of Stable).
               display_version = (
-                  f"Alpha {int(display_match.group(1))}.{int(display_match.group(2))}."
-                  f"{int(display_match.group(3))}.{int(display_match.group(4))}"
+                  f"{int(display_match.group(1))}.{int(display_match.group(2))}."
+                  f"{int(display_match.group(3))}.{int(display_match.group(4))} Alpha"
                   if display_match
                   else version
               )
