@@ -120,6 +120,8 @@ test.afterEach(() => {
   removeFixtureVaultCopy(tempVaultDir)
 })
 
+// Raw editor coalesces at 500ms; disk autosave still requires a full 1.5s idle after the
+// latest content reaches useEditorSave (ADR-0102 / ADR-0183). 900ms + 450ms stay under that.
 test('@smoke autosave waits for idle typing and persists the latest draft only', async ({ page }) => {
   const notePath = path.join(tempVaultDir, 'note', 'note-b.md')
   const firstDraft = `# Note B\n\nLow-end autosave first draft ${Date.now()}`

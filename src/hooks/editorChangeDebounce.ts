@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type MutableRefObject } from 'react'
 
-export const RICH_EDITOR_CHANGE_DEBOUNCE_MS = 1_500
+/** Coalesce BlockNote→Markdown before the disk autosave idle (ADR-0183). Keep shorter than AUTO_SAVE_DEBOUNCE_MS. */
+export const RICH_EDITOR_CHANGE_DEBOUNCE_MS = 500
 
 export function useDebouncedEditorChange({
   onFlush,

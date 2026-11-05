@@ -280,7 +280,7 @@ The AI workspace can also open in a separate Tauri window through `openAiWorkspa
 **Architecture:**
 - `openNoteInNewWindow()` (`src/utils/openNoteWindow.ts`) creates a new `WebviewWindow` via the Tauri v2 JS API with URL query params (`?window=note&path=...&vault=...&title=...`)
 - `main.tsx` always mounts `App`; `App` checks `isNoteWindow()` at startup, keeps normal vault/workspace loading active, and `useNoteWindowLifecycle` opens the requested note after the app graph is ready
-- Each window has its own auto-save via `useEditorSaveWithLinks` (same 1.5s low-end-safe idle debounce, same Rust `save_note_content` command), and raw-editor typing also derives frontmatter-backed `VaultEntry` state in the renderer so Inspector and note-list surfaces react immediately without waiting for a full reload
+- Each window has its own auto-save via `useEditorSaveWithLinks` (same 1.5s low-end-safe disk idle debounce from ADR-0102, same Rust `save_note_content` command). Rich-editor Markdown coalesce uses a shorter 500ms serialize idle (ADR-0183) before that disk window; raw-editor typing also derives frontmatter-backed `VaultEntry` state in the renderer so Inspector and note-list surfaces react immediately without waiting for a full reload
 - Automatic Git repository/status probes, AutoSync, and AutoGit remain main-window responsibilities. Note windows preserve manual Git actions without starting duplicate background loops.
 - Shared vault roots have one native watcher with window-label ownership. Known changes in note windows reload affected entries only; exceptional paths retain the full external-refresh fallback.
 - Secondary windows are sized 800×700; macOS keeps the overlay title bar, while Linux mounts the shared React titlebar on undecorated windows
@@ -551,10 +551,9 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    A["✏️ Editor content changes"] --> B["useEditorSave\n(debounced)"]
-    B --> C["restore durable Markdown tokens"]
-    C --> D["direct block Markdown serializer\nor BlockNote fallback"]
-    D --> E["invoke('save_note_content')"]
+    A["✏️ Editor content changes"] --> S["Rich: 500ms serialize idle\nRaw: 500ms input coalesce"]
+    S --> B["useEditorSave\n1.5s disk idle"]
+    B --> E["invoke('save_note_content')"]
     E --> F["💾 Disk write"]
     F --> G["Update tab status indicator"]
 ```

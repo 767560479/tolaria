@@ -680,6 +680,36 @@ describe('useEditorTabSwap raw mode sync', () => {
     )
   })
 
+  it('enters the save pipeline after a 500ms serialize idle without waiting for disk autosave', async () => {
+    const tabA = makeTab('timing.md', 'Timing Note')
+    const onContentChange = vi.fn()
+    const { docRef, mockEditor, result } = await createSwapHarness({
+      initialProps: { tabs: [tabA], activeTabPath: 'timing.md', rawMode: false },
+      onContentChange,
+    })
+    docRef.current = [makeTextParagraphBlock('Pending markdown')]
+    mockEditor.blocksToMarkdownLossy.mockReturnValue('Pending markdown\n')
+
+    vi.useFakeTimers()
+    try {
+      act(() => {
+        result.current.handleEditorChange()
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(500)
+      })
+      expect(onContentChange).toHaveBeenCalledTimes(1)
+
+      act(() => {
+        vi.advanceTimersByTime(1_500)
+      })
+      expect(onContentChange).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('coalesces rich-editor serialization for a 4000-word note', async () => {
     const tabA = makeTab('long.md', 'Long Note')
     const onContentChange = vi.fn()
