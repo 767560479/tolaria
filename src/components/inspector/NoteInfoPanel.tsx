@@ -3,15 +3,11 @@ import { useMemo } from 'react'
 import { Info } from '@phosphor-icons/react'
 import { countWords } from '../../utils/wikilinks'
 import { translate, type AppLocale } from '../../lib/i18n'
-import {
-  formatTimestampForDateDisplay,
-  type DateDisplayFormat,
-} from '../../utils/dateDisplay'
-import { useDateDisplayFormat } from '../../hooks/useAppPreferences'
+import { formatTimestampForDateTimeDisplay } from '../../utils/dateDisplay'
 
-function formatDate(timestamp: number | null, dateDisplayFormat: DateDisplayFormat): string {
+function formatDate(timestamp: number | null): string {
   if (!timestamp) return '\u2014'
-  return formatTimestampForDateDisplay(timestamp, dateDisplayFormat)
+  return formatTimestampForDateTimeDisplay(timestamp)
 }
 
 function formatFileSize(bytes: number): string {
@@ -40,7 +36,6 @@ export function NoteInfoPanel({
   content: string | null
   locale?: AppLocale
 }) {
-  const dateDisplayFormat = useDateDisplayFormat()
   const wordCount = useMemo(() => countWords(content ?? ''), [content])
   return (
     <div>
@@ -49,8 +44,8 @@ export function NoteInfoPanel({
         {translate(locale, 'inspector.info.title')}
       </h4>
       <div className="flex flex-col gap-1.5">
-        <InfoRow label={translate(locale, 'inspector.info.modified')} value={formatDate(entry.modifiedAt, dateDisplayFormat)} />
-        <InfoRow label={translate(locale, 'inspector.info.created')} value={formatDate(entry.createdAt, dateDisplayFormat)} />
+        <InfoRow label={translate(locale, 'inspector.info.modified')} value={formatDate(entry.modifiedAt)} />
+        <InfoRow label={translate(locale, 'inspector.info.created')} value={formatDate(entry.createdAt)} />
         <InfoRow label={translate(locale, 'inspector.info.words')} value={String(wordCount)} />
         <InfoRow label={translate(locale, 'inspector.info.size')} value={formatFileSize(entry.fileSize)} />
       </div>

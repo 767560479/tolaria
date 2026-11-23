@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDatePartsForDisplay,
   formatDateValueForDisplay,
+  formatTimestampForDateTimeDisplay,
   normalizeDateDisplayFormat,
 } from './dateDisplay'
 
@@ -27,5 +28,11 @@ describe('dateDisplay', () => {
     expect(formatDateValueForDisplay('2026-05-11', 'european')).toBe('11/5/2026')
     expect(formatDateValueForDisplay('05/11/2026', 'friendly')).toBe('May 11, 2026')
     expect(formatDateValueForDisplay('next Monday', 'iso')).toBe('next Monday')
+  })
+
+  it('formats timestamps with a 24-hour date and time', () => {
+    const timestamp = Math.floor(new Date(2026, 4, 11, 14, 35, 8).getTime() / 1000)
+
+    expect(formatTimestampForDateTimeDisplay(timestamp)).toBe('2026-05-11 14:35:08')
   })
 })

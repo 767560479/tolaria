@@ -67,6 +67,18 @@ export function formatTimestampForDateDisplay(
   return formatDateForDisplay(new Date(timestampSeconds * 1000), format)
 }
 
+export function formatTimestampForDateTimeDisplay(
+  timestampSeconds: number | null | undefined,
+): string {
+  if (!timestampSeconds) return ''
+
+  const date = new Date(timestampSeconds * 1000)
+  return [
+    `${date.getFullYear()}-${twoDigit(date.getMonth() + 1)}-${twoDigit(date.getDate())}`,
+    `${twoDigit(date.getHours())}:${twoDigit(date.getMinutes())}:${twoDigit(date.getSeconds())}`,
+  ].join(' ')
+}
+
 export function parseDateDisplayParts(value: string): DateParts | null {
   return parseDashDateParts(value) ?? parseSlashDateParts(value)
 }

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { NoteInfoPanel } from './NoteInfoPanel'
 import type { VaultEntry } from '../../types'
-import { formatTimestampForDateDisplay } from '../../utils/dateDisplay'
 
 function makeEntry(overrides: Partial<VaultEntry> = {}): VaultEntry {
   return {
@@ -35,12 +34,10 @@ describe('NoteInfoPanel', () => {
     expect(labels).toContain('Created')
   })
 
-  it('formats Modified and Created with the default iso date display', () => {
-    const timestamp = 1700000000
-    const expected = formatTimestampForDateDisplay(timestamp, 'iso')
+  it('formats Modified and Created with a 24-hour date and time', () => {
+    const timestamp = Math.floor(new Date(2026, 4, 11, 14, 35, 8).getTime() / 1000)
     render(<NoteInfoPanel entry={makeEntry({ modifiedAt: timestamp, createdAt: timestamp })} content="" />)
-    expect(screen.getAllByText(expected)).toHaveLength(2)
-    expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(screen.getAllByText('2026-05-11 14:35:08')).toHaveLength(2)
   })
 
   it('renders file size', () => {
