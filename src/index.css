@@ -130,6 +130,9 @@
   --editor-code-block-border: var(--border-subtle);
   --editor-code-block-text: var(--text-primary);
   --editor-code-block-language: var(--text-secondary);
+  --surface-markdown-quote: color-mix(in srgb, var(--surface-card) 88%, var(--accent-orange) 12%);
+  --surface-markdown-code: color-mix(in srgb, var(--surface-sidebar) 78%, var(--surface-card) 22%);
+  --border-markdown-quote: color-mix(in srgb, var(--accent-orange) 78%, var(--border-strong) 22%);
   --editor-paragraph-spacing: 0.5em;
 
   /* --- Overlays and shadows (light mode) --- */
@@ -292,6 +295,9 @@
   --editor-code-block-border: transparent;
   --editor-code-block-text: #FFFFFF;
   --editor-code-block-language: rgba(255, 255, 255, 0.7);
+  --surface-markdown-quote: color-mix(in srgb, var(--surface-card) 82%, var(--accent-orange) 18%);
+  --surface-markdown-code: color-mix(in srgb, var(--surface-sidebar) 86%, #000 14%);
+  --border-markdown-quote: color-mix(in srgb, var(--accent-orange) 82%, var(--border-strong) 18%);
   --editor-paragraph-spacing: 0.5em;
 
   /* --- Overlays and shadows (dark mode) --- */
@@ -599,6 +605,7 @@
 .ai-markdown h2,
 .ai-markdown h3,
 .ai-markdown h4 {
+  color: var(--text-heading);
   font-weight: 600;
   margin: 0.8em 0 0.4em;
   line-height: 1.3;
@@ -620,18 +627,20 @@
 .ai-markdown code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 0.9em;
-  background: var(--muted);
-  border-radius: 3px;
+  background: var(--surface-markdown-code);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
   padding: 0.15em 0.35em;
   overflow-wrap: anywhere;
 }
 
 .ai-markdown pre {
   margin: 0.5em 0;
-  border-radius: 6px;
-  background: var(--muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--editor-code-block-background);
   max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
   max-height: 400px;
 }
@@ -649,10 +658,21 @@
 }
 
 .ai-markdown blockquote {
-  margin: 0.5em 0;
-  padding: 0.25em 0.75em;
-  border-inline-start: 3px solid var(--border);
+  margin: 0.7em 0;
+  padding: 0.65em 0.9em 0.65em 1em;
+  border-inline-start: 3px solid var(--border-markdown-quote);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-markdown-quote);
   color: var(--muted-foreground);
+  font-style: italic;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--border-subtle) 70%, transparent);
+}
+
+.ai-markdown blockquote > :first-child { margin-top: 0; }
+.ai-markdown blockquote > :last-child { margin-bottom: 0; }
+
+.ai-markdown blockquote strong {
+  color: var(--text-primary);
 }
 
 .ai-markdown a {
@@ -699,7 +719,7 @@
   text-align: start;
 }
 .ai-markdown th {
-  background: var(--muted);
+  background: var(--surface-card);
   font-weight: 600;
 }
 

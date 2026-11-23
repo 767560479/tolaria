@@ -840,11 +840,16 @@ body.tldraw-whiteboard-fullscreen-open {
 .editor__blocknote-container [data-content-type="blockquote"],
 .editor__blocknote-container blockquote {
   border-inline-start: var(--blockquote-border-left-width) solid var(--blockquote-border-left-color);
+  padding-block: 10px;
   padding-inline-start: var(--blockquote-padding-left);
+  padding-inline-end: 14px;
   margin-top: var(--blockquote-margin-vertical);
   margin-bottom: var(--blockquote-margin-vertical);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-markdown-quote);
   color: var(--blockquote-color);
   font-style: var(--blockquote-font-style);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--border-subtle) 70%, transparent);
 }
 
 /* --- Table --- */
