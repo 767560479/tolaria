@@ -209,7 +209,7 @@ jobs:
 
       - name: Test AI provider protocols
         shell: pwsh
-        run: cargo test --manifest-path src-tauri/Cargo.toml ai_model --lib
+        run: cargo test --manifest-path src-tauri/Cargo.toml --test ai_model_protocol
 
       - name: Build Windows NSIS installer (unsigned)
         shell: pwsh
