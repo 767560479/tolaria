@@ -1,3 +1,4 @@
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
@@ -201,9 +202,7 @@ where
 
     // Still emit for tool/timeline listeners; the frontend finalizes assistant text from
     // this invoke return value to avoid racing TextDelta/Done against invoke resolution.
-    emit(AiAgentStreamEvent::TextDelta {
-        text: text.clone(),
-    });
+    emit(AiAgentStreamEvent::TextDelta { text: text.clone() });
     emit(AiAgentStreamEvent::Done);
     Ok(text)
 }
@@ -345,7 +344,13 @@ fn apply_provider_headers(
     for (key, value) in safe_custom_headers(request) {
         builder = builder.header(key, value);
     }
-    builder
+    let mut identity = HeaderMap::new();
+    identity.insert(
+        USER_AGENT,
+        HeaderValue::from_static("codex_cli_rs/0.171.0-alpha.13.2 (Windows 10.0.26300; x86_64)"),
+    );
+    identity.insert("originator", HeaderValue::from_static("codex_cli_rs"));
+    builder.headers(identity)
 }
 
 fn safe_custom_headers(request: &AiModelStreamRequest) -> Vec<(&String, &String)> {
@@ -709,6 +714,117 @@ mod tests {
             built.headers()["authorization"].to_str().unwrap(),
             "Bearer openai-secret"
         );
+    }
+
+    fn reply_to_model_request(listener: std::net::TcpListener) -> Vec<String> {
+        use std::io::{BufRead, Read, Write};
+
+        let (mut stream, _) = listener.accept().unwrap();
+        stream
+            .set_read_timeout(Some(std::time::Duration::from_secs(5)))
+            .unwrap();
+        let mut reader = std::io::BufReader::new(&stream);
+        let mut headers = Vec::new();
+        loop {
+            let mut line = String::new();
+            assert_ne!(reader.read_line(&mut line).unwrap(), 0);
+            if line == "\r\n" {
+                break;
+            }
+            headers.push(line.trim_end().to_string());
+        }
+        let content_length = headers
+            .iter()
+            .filter_map(|line| line.split_once(':'))
+            .find(|(name, _)| name.eq_ignore_ascii_case("content-length"))
+            .map(|(_, value)| value.trim().parse::<usize>().unwrap())
+            .unwrap();
+        reader.read_exact(&mut vec![0; content_length]).unwrap();
+        let body = r#"{"choices":[{"message":{"content":"OK"}}],"content":[{"text":"OK"}]}"#;
+        write!(
+            stream,
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+            body.len()
+        )
+        .unwrap();
+        headers
+    }
+
+    #[test]
+    fn model_chat_and_probe_send_codex_identity_for_every_provider() {
+        for kind in [
+            AiModelProviderKind::OpenAi,
+            AiModelProviderKind::Anthropic,
+            AiModelProviderKind::OpenAiCompatible,
+            AiModelProviderKind::Ollama,
+            AiModelProviderKind::LmStudio,
+            AiModelProviderKind::OpenRouter,
+            AiModelProviderKind::Gemini,
+        ] {
+            for probe in [false, true] {
+                let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+                let mut provider = provider(kind.clone());
+                provider.base_url = Some(format!("http://{}/v1", listener.local_addr().unwrap()));
+                provider.api_key_env_var = None;
+                let server = std::thread::spawn(move || reply_to_model_request(listener));
+                let result = if probe {
+                    test_ai_model_provider(AiModelProviderTestRequest {
+                        provider,
+                        model_id: "demo-model".into(),
+                        api_key_override: None,
+                    })
+                } else {
+                    run_ai_model_stream(request(provider), |_| {})
+                };
+                let headers = server.join().unwrap();
+                assert_eq!(result.unwrap(), "OK");
+                let identity = headers
+                    .iter()
+                    .filter_map(|line| line.split_once(':'))
+                    .filter(|(name, _)| {
+                        name.eq_ignore_ascii_case("user-agent")
+                            || name.eq_ignore_ascii_case("originator")
+                    })
+                    .map(|(name, value)| (name.to_ascii_lowercase(), value.trim().to_string()))
+                    .collect::<BTreeMap<_, _>>();
+                assert_eq!(
+                    identity,
+                    BTreeMap::from([
+                        ("originator".into(), "codex_cli_rs".into()),
+                        (
+                            "user-agent".into(),
+                            "codex_cli_rs/0.171.0-alpha.13.2 (Windows 10.0.26300; x86_64)".into(),
+                        ),
+                    ]),
+                    "provider {kind:?}, probe {probe}",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn codex_identity_replaces_custom_headers_without_duplicates() {
+        let mut provider = provider(AiModelProviderKind::OpenAiCompatible);
+        provider.headers = Some(BTreeMap::from([
+            ("USER-AGENT".into(), "other-client/1.0".into()),
+            ("Originator".into(), "other-client".into()),
+            ("X-Demo".into(), "demo".into()),
+        ]));
+        let built = apply_provider_headers(
+            reqwest::blocking::Client::new().post("https://example.test"),
+            &request(provider),
+        )
+        .build()
+        .unwrap();
+        let headers = built.headers();
+        assert_eq!(headers.get_all("user-agent").iter().count(), 1);
+        assert_eq!(headers.get_all("originator").iter().count(), 1);
+        assert_eq!(
+            headers["user-agent"],
+            "codex_cli_rs/0.171.0-alpha.13.2 (Windows 10.0.26300; x86_64)"
+        );
+        assert_eq!(headers["originator"], "codex_cli_rs");
+        assert_eq!(headers["X-Demo"], "demo");
     }
 
     #[test]

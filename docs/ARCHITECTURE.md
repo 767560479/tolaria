@@ -301,6 +301,8 @@ In-app AI is limited to direct model providers (see [ADR-0175](adr/0175-fork-rem
 2. **Backend** (`ai_models.rs`, `ai_model_tools.rs`) — HTTP streaming to OpenAI-compatible chat completions and Anthropic Messages endpoints (Ollama, LM Studio, OpenRouter, OpenAI, Anthropic, Gemini, custom compatible bases)
 3. **Settings** — `settings.ai_model_providers` stores non-secret provider metadata; `settings.default_ai_target` holds the active `model:<provider>/<model>` id. Provider secrets live in `ai-provider-secrets.json` or referenced environment variables, not in `settings.json`
 
+All model-provider HTTP requests, including workspace chat, connection tests, and commit-message drafts, use the Codex-compatible identity headers `User-Agent: codex_cli_rs/0.171.0-alpha.13.2 (Windows 10.0.26300; x86_64)` and `originator: codex_cli_rs`, matching the xingchipx proxy. The shared request builder replaces custom headers with these names without duplicating them. Provider authentication and other custom headers remain supported. This identity is pinned for gateway compatibility; it does not depend on an installed Codex executable.
+
 OpenAI-compatible targets may invoke Tolaria's narrow native `create_note` tool when an active vault is loaded. The tool uses the same create-only, active-vault-bounded write path as the UI and emits tool events so the renderer can refresh and open the created note. Models do not receive shell access or general file-write tools.
 
 Each `stream_ai_model` call receives a request-scoped stream event name. The renderer subscribes to that scoped channel for the duration of the request and ignores stale events after stop or completion.
