@@ -207,6 +207,10 @@ jobs:
             -replace '^version = ".*"$', "version = `"$version`"" `
             | Set-Content "src-tauri/Cargo.toml"
 
+      - name: Test AI provider protocols
+        shell: pwsh
+        run: cargo test --manifest-path src-tauri/Cargo.toml ai_model --lib
+
       - name: Build Windows NSIS installer (unsigned)
         shell: pwsh
         run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles nsis
